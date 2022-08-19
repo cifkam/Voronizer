@@ -39,35 +39,31 @@ class MySet:
 """
 
 class Cell:
-    def __init__(self, row, col, cls, state=State.unseen):
+    def __init__(self, row, col, state=State.unseen):
         self.row = row
         self.col = col
-        self.cls = cls
         self.state = state
 
     def __str__(self):
-        return f"<{self.cls}>"
+        return f"<{self.row}, {self.col}, {self.state}>"
     def __repr__(self):
-        return f"<{self.cls}>"
+        return f"<{self.row}, {self.col}, {self.state}>"
     def __hash__(self):
         return hash((self.row,self.col))
     def __eq__(self, other):
         return hash(self) == hash(other)
 
-def cells_to_numpy(m):
-        return np.array(list(map(lambda x: list(map(lambda y: y.cls, x)), m)))
-
-def get_neighbour_indices(x, bool_4_8, width, height):
-    if x.row == 0:
+def get_neighbour_indices(cell, bool_4_8, width, height):
+    if cell.row == 0:
         row_delta = [0,1]
-    elif x.row == height-1:
+    elif cell.row == height-1:
         row_delta = [-1,0]
     else:
         row_delta = [-1,0,1]
 
-    if x.col == 0:
+    if cell.col == 0:
         col_delta = [0,1]
-    elif x.col == width-1:
+    elif cell.col == width-1:
         col_delta = [-1,0]
     else:
         col_delta = [-1,0,1]
@@ -75,48 +71,48 @@ def get_neighbour_indices(x, bool_4_8, width, height):
     if bool_4_8:
         for r in row_delta:
             if r == 0: continue
-            yield (x.row+r, x.col)
+            yield (cell.row+r, cell.col)
         for c in col_delta:
             if c == 0: continue
-            yield (x.row, x.col+c)
+            yield (cell.row, cell.col+c)
     else:
         for r in row_delta:
             for c in col_delta:
                 if r == 0 and c == 0: continue
-                yield (x.row+r, x.col+c)
+                yield (cell.row+r, cell.col+c)
 
-def get_neighbours(x, bool_4_8, width, height, mat):
-    return [ mat[r][c] for r,c in get_neighbour_indices(x, bool_4_8, width, height) ]
+def get_neighbours(cell, bool_4_8, width, height, cellMat):
+    return [ cellMat[r][c] for r,c in get_neighbour_indices(cell, bool_4_8, width, height) ]
 
 
 def growing(data, init_funct, post_funct=nop, neighborhood=Neighborhood.n4):
     bool_4_8 = (neighborhood == Neighborhood.n4)
-    height = len(data)
-    width = len(data[0])
-    opened,mat = init_funct()
+    opened,cellMat = init_funct()
+    height = len(cellMat)
+    width = len(cellMat[0])
     steps = 0
 
     processed = []
     while len(opened) > 0:
         new = set()
-        for x in opened:
-            for neighbour in get_neighbours(x, bool_4_8, width, height, mat):
+        for cell in opened:
+            for neighbour in get_neighbours(cell, bool_4_8, width, height, cellMat): #TODO: edit neighbours
             #for neighbour in get_neighbours(x, np.random.random()>0.5, width, height, mat):
 
                 if neighbour.state == State.unseen:
                     new.add(neighbour)
-                    neighbour.cls = x.cls
+                    data[neighbour.row,neighbour.col] = data[cell.row,cell.col]
                     neighbour.state = State.opened
             
-            x.state = State.closed
-            processed.append(x)
+            cell.state = State.closed
+            processed.append(cell)
         
         if neighborhood == Neighborhood.swap: bool_4_8 = not bool_4_8
         opened = new
         steps += 1
     
     post_funct(processed)
-    return mat, steps
+    return steps
 
 def voronoi(data):
     def init_funct():
@@ -124,22 +120,23 @@ def voronoi(data):
         width = len(data[0])
         opened = set()
 
-        mat = [[None for col in range(width)] for row in range(height)]
-        for row in range(len(mat)):
-            for col in range(len(mat[0])):
+        cellMat = [[None for col in range(width)] for row in range(height)]
+        for row in range(len(cellMat)):
+            for col in range(len(cellMat[0])):
                 x = data[row][col]
 
                 if x != 0:
-                    x = Cell(row, col, x, State.opened)
+                    x = Cell(row, col, State.opened)
                     opened.add(x)
-                    mat[row][col] = x
+                    cellMat[row][col] = x
                 else:
-                    x = Cell(row, col, x, State.unseen)
-                    mat[row][col] = x
+                    x = Cell(row, col, State.unseen)
+                    cellMat[row][col] = x
 
-        return opened,mat
+        return opened,cellMat
 
-    return cells_to_numpy(growing(data, init_funct, neighborhood=Neighborhood.swap)[0])
+    growing(data, init_funct, neighborhood=Neighborhood.swap)
+    return data
 
 
 
@@ -147,37 +144,37 @@ def cluster(data, treshold=50):
     
     def init_funct(cls):
         opened = set()
-        i = np.argpartition(  -(cells_to_numpy(mat).reshape(-1) == 0).astype(int) , 1  )[0]
-        x = mat[i//width][i%width]
+        i = np.argpartition(  -(data.reshape(-1) == 0).astype(int) , 1  )[0]
+        cell = cellMat[i//width][i%width]
 
-        if x.cls == 0:
-            x.state = State.opened
-            x.cls = cls
-            opened.add(x)
-        return opened,mat
+        if data[cell.row,cell.col] == 0:
+            cell.state = State.opened
+            data[cell.row,cell.col] = cls
+            opened.add(cell)
+        return opened,cellMat
 
     def post_funct(processed, treshold):
         if len(processed) < treshold:
-            for x in processed:
-                x.cls = -1
+            for cell in processed:
+                data[cell.row,cell.col] = -1
             
     height = len(data)
     width = len(data[0])
     data = (data > 0).astype(int) - 1
-    mat = [[None for col in range(width)] for row in range(height)]
+    cellMat = [[None for col in range(width)] for row in range(height)]
 
     for row in range(height):
         for col in range(width):
-            mat[row][col] = Cell(row, col, data[row][col], State.unseen if data[row][col] == 0 else State.closed)
+            cellMat[row][col] = Cell(row, col, State.unseen if data[row][col] == 0 else State.closed)
 
     post = functools.partial(post_funct, treshold=treshold)
     n = 1
     while True:
         init = functools.partial(init_funct, cls=n)
-        mat,steps = growing(mat, init, post_funct=post, neighborhood=Neighborhood.n4)
+        steps = growing(data, init, post_funct=post, neighborhood=Neighborhood.n4)
 
         if steps == 0:
-            return cells_to_numpy(mat)+1
+            return data+1
         else:
             n += 1
     
@@ -232,5 +229,5 @@ v = voronoi(mat)
 plt.imshow(cmap(v), interpolation='nearest')
 plt.show()
 
-plt.imshow(cmap(v)*(mat==0).reshape(v.shape+(1,)), interpolation='nearest')
+plt.imshow(cmap(v)*(data==0).reshape(v.shape+(1,)), interpolation='nearest')
 plt.show()

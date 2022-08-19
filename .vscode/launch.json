@@ -5,7 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) voronoi",
+            "name": "Python: voronoi.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/voronoi.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "(gdb) voronoi.cpp",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/voronoi",
@@ -23,13 +31,11 @@
                     "ignoreFailures": true
                 },
                 {
-                    "description":  "Set Disassembly Flavor to Intel",
+                    "description": "Set Disassembly Flavor to Intel",
                     "text": "-gdb-set disassembly-flavor intel",
                     "ignoreFailures": true
                 }
             ]
         }
-        
-
     ]
 }
