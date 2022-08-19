@@ -14,7 +14,7 @@ int main( int argc, char** argv )
 {
     //string filename = "lena.jpg";
     string filename = "kupka_pts_1.png";
-    std::function<set<>>;
+    std::function<set<int>(void)> x;
     cv::Mat image;
     image = cv::imread(filename,cv::IMREAD_COLOR);
     cout << image.size() << ", " << image.channels() << endl;
