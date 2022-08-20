@@ -1,9 +1,34 @@
+//#define NDEBUG // uncomment to disable assert()
+
+#include <iostream>
+#include <cassert>
 #include "growing.hpp"
+
 using namespace std;
 
-
-size_t Growing::run(cv::Mat& data)
+Cell::Cell(size_t row, size_t col, State state)
+: row(row), col(col), state(state)
 {
+
+}
+
+bool operator<(const Cell& lhs, const Cell& rhs)
+{
+    return lhs.row < rhs.row || (lhs.row == rhs.row && lhs.col < rhs.col);
+}
+
+
+Growing::Growing(Neighborhood neighborhood)
+ : neighborhood(neighborhood)
+ {
+
+ }
+
+size_t Growing::compute(cv::Mat& data)
+{
+    assert(data.depth() == CV_16S);
+
+
     bool bool_4_8 = (neighborhood == Neighborhood::n4);
     set<Cell*> opened;
     auto cell_mat = vector<vector<Cell>>(
@@ -34,7 +59,7 @@ size_t Growing::run(cv::Mat& data)
                 if (neighbor->state == State::unseen)
                 {
                     new_cells.insert(neighbor);
-                    data.at<int16_t>(neighbor->row, neighbor->col) = data.at<int16_t>(cell->row, cell->col);
+                    data.at<mat_t>(neighbor->row, neighbor->col) = data.at<mat_t>(cell->row, cell->col);
                     neighbor->state = State::opened;
                 }
             
@@ -104,80 +129,5 @@ vector<Cell*> Growing::get_neighbors(
     return neighbors;
 }
 
-void Clustering::init_funct(set<Cell*>& opened, vector<vector<Cell>>& cell_mat, cv::Mat& data)
-{
-    Cell* cell = nullptr;
-
-    for (int row = 0; row < data.rows; ++row)
-    {
-        for (int col = 0; col < data.cols; ++col)
-            cell_mat[row][col].state = (data.at<int16_t>(row,col) == 0 ?
-                State::unseen : State::closed);
-    }
-    for (int row = 0; row < data.rows; ++row)
-    {
-        for (int col = 0; col < data.cols; ++col)
-        {
-            if (data.at<int16_t>(row,col) == 0)
-            {
-                cell = &cell_mat[row][col];
-                break;
-            }
-        }
-
-        if (cell != nullptr) break; 
-    }
-    if (cell == nullptr) return;
 
 
-    cell->state = State::opened;
-    data.at<int16_t>(cell->row,cell->col) = n;
-    opened.insert(cell);
-}
-
-void Clustering::post_funct(std::vector<Cell*>& processed, cv::Mat& data)
-{
-    if (processed.size() < treshold)
-        for (auto cell : processed)
-            data.at<int16_t>(cell->row, cell->col) = -1;        
-}
-
-size_t Clustering::run(cv::Mat& data)
-{
-    data.convertTo(data, CV_16S);
-    data /= 255;
-    data -= 1;
-
-    n = 1;
-    size_t steps = 0;
-    while (true)
-    {
-        //TODO: reuse cell_mat instead of creating it always again
-        size_t s = Growing::run(data); 
-        steps += s;
-        if (s == 0)
-            break;
-        n++; 
-    }
-
-    n = 0;
-    data += 1;
-    //data.convertTo(data, CV_8U);
-    return steps;
-
-
-}
-
-void Voronoi::init_funct(set<Cell*>& opened, vector<vector<Cell>>& cell_mat, cv::Mat& data)
-{
-    for (int row = 0; row < data.rows; ++row)
-        for (int col = 0; col < data.cols; ++col)
-        {
-            if (data.at<int16_t>(row,col) != 0)
-            {
-                Cell* cell = &cell_mat[row][col];
-                cell->state = State::opened;
-                opened.insert(cell);
-            }
-        }
-}

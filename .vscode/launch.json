@@ -4,17 +4,8 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
-        {
-            "name": "Python: voronoi.py",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/voronoi.py",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-
-
+        
+        
         {
             "name": "(gdb) voronoi.cpp",
             "type": "cppdbg",
@@ -23,7 +14,7 @@
             "preLaunchTask": "${defaultBuildTask}",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -39,8 +30,18 @@
                     "ignoreFailures": true
                 }
             ]
-        }
+        },
 
+
+        {
+            "name": "Python: voronoi.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/voronoi.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        
 
     ]
 }
