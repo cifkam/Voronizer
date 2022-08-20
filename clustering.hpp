@@ -14,6 +14,11 @@ public:
 protected:
     size_t n;
     size_t treshold;
+
+    std::vector<std::vector<Cell>> cell_mat;
+    int last_row;
+    int last_col;
+
     void init_funct(std::set<Cell*>& opened, std::vector<std::vector<Cell>>& cell_mat, cv::Mat& data) override;
     void post_funct(std::vector<Cell*>& processed, cv::Mat& data) override;
 };

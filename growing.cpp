@@ -31,18 +31,7 @@ size_t Growing::compute(cv::Mat& data)
 
     bool bool_4_8 = (neighborhood == Neighborhood::n4);
     set<Cell*> opened;
-    auto cell_mat = vector<vector<Cell>>(
-        data.rows, vector<Cell>(
-        data.cols, Cell(0, 0, State::unseen)
-    ));
-    auto rows = data.rows;
-    auto cols = data.cols;
-    for (size_t row = 0; row < rows; ++row)
-        for (size_t col = 0; col < cols; ++col)
-        {
-            cell_mat[row][col].row = row;
-            cell_mat[row][col].col = col;
-        }
+    vector<vector<Cell>> cell_mat;
     init_funct(opened, cell_mat, data);
     
     size_t steps = 0;
@@ -55,7 +44,7 @@ size_t Growing::compute(cv::Mat& data)
         set<Cell*> new_cells;
         for (auto cell : opened)
         {
-            for (auto&& neighbor : get_neighbors(cell, cell_mat, bool_4_8, cols, rows))
+            for (auto&& neighbor : get_neighbors(cell, cell_mat, bool_4_8, data.cols, data.rows))
                 if (neighbor->state == State::unseen)
                 {
                     new_cells.insert(neighbor);

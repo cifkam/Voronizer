@@ -45,7 +45,7 @@ int main( int argc, char** argv)
         return -1;
     }
 
-    Clustering clustering(0);
+    Clustering clustering(50);
     Voronoi voronoi;
 
     data.convertTo(data, CV_16S);
@@ -66,11 +66,11 @@ int main( int argc, char** argv)
 
 
     // Randomly remap classes
-    auto lut = cv::Mat(256, 1, CV_8U);
+    /*auto lut = cv::Mat(256, 1, CV_8U);
     for (int i = 0; i < 256; ++i)
         lut.at<int8_t>(i,0) = i;
-    //cv::randShuffle(lut);
-    cv::LUT(data, lut, data);
+    cv::randShuffle(lut);
+    cv::LUT(data, lut, data);*/
 
     cv::applyColorMap(data, data, cv::COLORMAP_TWILIGHT);
     
