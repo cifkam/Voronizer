@@ -64,7 +64,6 @@ size_t Clustering::compute(cv::Mat& data)
 
     n = 0;
     data += 1;
-    //data.convertTo(data, CV_8U);
     return steps;
 
 

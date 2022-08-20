@@ -213,8 +213,8 @@ data1 = np.array(
  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]])
 
 
-img = np.array(  Image.open('kupka_1.png') )
-data = np.array( Image.open('kupka_pts_1.png').convert('L') )
+img = np.array(  Image.open('img/kupka_1.png') )
+data = np.array( Image.open('img/kupka_pts_1.png').convert('L') )
 
 n=1
 data = data[:data.shape[0]//n, :data.shape[1]//n]
