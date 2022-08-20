@@ -53,7 +53,7 @@ class Cell:
     def __eq__(self, other):
         return hash(self) == hash(other)
 
-def get_neighbour_indices(cell, bool_4_8, width, height):
+def get_neighbor_indices(cell, bool_4_8, width, height):
     if cell.row == 0:
         row_delta = [0,1]
     elif cell.row == height-1:
@@ -81,28 +81,28 @@ def get_neighbour_indices(cell, bool_4_8, width, height):
                 if r == 0 and c == 0: continue
                 yield (cell.row+r, cell.col+c)
 
-def get_neighbours(cell, bool_4_8, width, height, cellMat):
-    return [ cellMat[r][c] for r,c in get_neighbour_indices(cell, bool_4_8, width, height) ]
+def get_neighbors(cell, bool_4_8, width, height, cellMat):
+    return [ cellMat[r][c] for r,c in get_neighbor_indices(cell, bool_4_8, width, height) ]
 
 
 def growing(data, init_funct, post_funct=nop, neighborhood=Neighborhood.n4):
     bool_4_8 = (neighborhood == Neighborhood.n4)
     opened,cellMat = init_funct()
-    height = len(cellMat)
-    width = len(cellMat[0])
+    rows = data.shape[0]
+    cols = data.shape[1]
     steps = 0
 
     processed = []
     while len(opened) > 0:
         new = set()
         for cell in opened:
-            for neighbour in get_neighbours(cell, bool_4_8, width, height, cellMat): #TODO: edit neighbours
-            #for neighbour in get_neighbours(x, np.random.random()>0.5, width, height, mat):
+            for neighbor in get_neighbors(cell, bool_4_8, cols, rows, cellMat):
+            #for neighbor in get_neighbors(x, np.random.random()>0.5, width, height, mat):
 
-                if neighbour.state == State.unseen:
-                    new.add(neighbour)
-                    data[neighbour.row,neighbour.col] = data[cell.row,cell.col]
-                    neighbour.state = State.opened
+                if neighbor.state == State.unseen:
+                    new.add(neighbor)
+                    data[neighbor.row,neighbor.col] = data[cell.row,cell.col]
+                    neighbor.state = State.opened
             
             cell.state = State.closed
             processed.append(cell)
@@ -116,16 +116,15 @@ def growing(data, init_funct, post_funct=nop, neighborhood=Neighborhood.n4):
 
 def voronoi(data):
     def init_funct():
-        height = len(data)
-        width = len(data[0])
+        rows = len(data)
+        cols = len(data[0])
         opened = set()
 
-        cellMat = [[None for col in range(width)] for row in range(height)]
+        cellMat = [[None for col in range(cols)] for row in range(rows)]
         for row in range(len(cellMat)):
             for col in range(len(cellMat[0])):
-                x = data[row][col]
 
-                if x != 0:
+                if data[row][col] != 0:
                     x = Cell(row, col, State.opened)
                     opened.add(x)
                     cellMat[row][col] = x
@@ -144,6 +143,8 @@ def cluster(data, treshold=50):
     
     def init_funct(cls):
         opened = set()
+        
+        # find first zero element
         i = np.argpartition(  -(data.reshape(-1) == 0).astype(int) , 1  )[0]
         cell = cellMat[i//width][i%width]
 

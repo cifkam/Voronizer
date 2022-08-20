@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Python: voronoi.py",
             "type": "python",
@@ -12,6 +13,8 @@
             "console": "integratedTerminal",
             "justMyCode": true
         },
+
+
         {
             "name": "(gdb) voronoi.cpp",
             "type": "cppdbg",
@@ -37,5 +40,7 @@
                 }
             ]
         }
+
+
     ]
 }

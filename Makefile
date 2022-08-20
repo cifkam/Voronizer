@@ -1,6 +1,10 @@
 CC = g++
 PROJECT = voronoi
-SRC = voronoi.cpp
+CPP = *.cpp
+HPP = *.hpp
 LIBS = `pkg-config --cflags --libs opencv4`
-$(PROJECT) : $(SRC)
-	$(CC) $(SRC) -o $(PROJECT) $(LIBS)
+$(PROJECT) : $(CPP) $(HPP)
+	$(CC) -g $(CPP) -o $(PROJECT) $(LIBS)
+
+clean:
+	rm voronoi
