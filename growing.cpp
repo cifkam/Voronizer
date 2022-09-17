@@ -8,9 +8,7 @@ using namespace std;
 
 Cell::Cell(size_t row, size_t col, State state)
 : row(row), col(col), state(state)
-{
-
-}
+{}
 
 bool operator<(const Cell& lhs, const Cell& rhs)
 {
@@ -20,18 +18,74 @@ bool operator<(const Cell& lhs, const Cell& rhs)
 
 Growing::Growing(Neighborhood neighborhood)
  : neighborhood(neighborhood)
- {
+{}
 
- }
+void Growing::post_funct(std::vector<Cell*>& processed, cv::Mat& data)
+{
+    for (auto& cell : processed)
+    {
+        int cls = data.at<int_t>(cell->row, cell->col);
+        add_to_group(cell, cls);
+    }
+}
 
-size_t Growing::compute(cv::Mat& data)
+void Growing::add_to_group(Cell* cell, int cls)
+{
+    auto it = groups.find(cls);
+    if (it == groups.end())
+        groups.emplace_hint(it, cls, std::vector<Cell*>(1, cell)); // not found
+    else
+        it->second.push_back(cell); //found
+}
+    
+
+void Growing::assign(cv::Mat& data, Cell* from, Cell* to)
+{
+    data.at<int_t>(to->row, to->col) = data.at<int_t>(from->row, from->col);
+}
+
+void Growing::assign(cv::Mat& data, int value, Cell* to)
+{
+    data.at<int_t>(to->row, to->col) = value;
+}
+
+
+Groups Growing::clear_groups()
+{
+    auto g = move(groups);
+    groups = Groups();
+    return g;
+}
+
+CellMat Growing::clear_cellmat()
+{
+    auto c = move(cell_mat);
+    cell_mat = CellMat();
+    return c;
+}
+
+
+bool Growing::grow_condition(const cv::Mat& input_data, const cv::Mat& data, Cell* cell, Cell* neighbor)
+{
+    return neighbor->state == State::unseen;   
+}
+
+size_t Growing::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_groups)
+{
+    cv::Mat data = input_data.clone();
+    size_t steps = compute_inner(data, clear_groups);
+    output_data = move(data);
+    return steps;
+}
+
+size_t Growing::compute_inner(cv::Mat& data, bool clear_groups)
 {
     assert(data.depth() == CV_16S);
-
+    if (clear_groups)
+        this->clear_groups();
 
     bool bool_4_8 = (neighborhood == Neighborhood::n4);
     set<Cell*> opened;
-    vector<vector<Cell>> cell_mat;
     init_funct(opened, cell_mat, data);
     
     size_t steps = 0;
@@ -45,10 +99,10 @@ size_t Growing::compute(cv::Mat& data)
         for (auto cell : opened)
         {
             for (auto&& neighbor : get_neighbors(cell, cell_mat, bool_4_8, data.cols, data.rows))
-                if (neighbor->state == State::unseen)
+                if (grow_condition(data, data, cell, neighbor))
                 {
                     new_cells.insert(neighbor);
-                    data.at<mat_t>(neighbor->row, neighbor->col) = data.at<mat_t>(cell->row, cell->col);
+                    assign(data, cell, neighbor);
                     neighbor->state = State::opened;
                 }
             
@@ -68,7 +122,8 @@ size_t Growing::compute(cv::Mat& data)
 
 
 vector<Cell*> Growing::get_neighbors(
-    const Cell* cell, vector<vector<Cell>>& cell_mat,
+    const Cell* cell,
+    CellMat& cell_mat,
     bool bool_4_8,
     size_t cols,
     size_t rows

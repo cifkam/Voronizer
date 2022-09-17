@@ -10,9 +10,15 @@
             "name": "(gdb) voronoi.cpp",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/voronoi",
+            "program": "${workspaceFolder}/Voronizer",
             "preLaunchTask": "${defaultBuildTask}",
-            "args": [],
+            "args": [
+                "-i", "img/lena.jpg",
+                "-t", "15",
+                "-m", "sobel",
+                "-c", "twilight",
+                "-s", "3"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
