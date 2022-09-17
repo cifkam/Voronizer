@@ -1,7 +1,7 @@
 # Voronizer
 
 ## Build
-Requires OpenCV 4.6.0
+Requires OpenCV >= 4.4.0
 ```
 cmake . && make
 ```
