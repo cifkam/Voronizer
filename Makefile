@@ -57,10 +57,10 @@ RM = /home/martin/.local/lib/python3.8/site-packages/cmake/data/bin/cmake -E rm 
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/martin/Documents/skola/AVG/voronoi_raster
+CMAKE_SOURCE_DIR = /home/martin/Documents/skola/AVG/Voronizer
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/martin/Documents/skola/AVG/voronoi_raster
+CMAKE_BINARY_DIR = /home/martin/Documents/skola/AVG/Voronizer
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/martin/Documents/skola/AVG/voronoi_raster/CMakeFiles /home/martin/Documents/skola/AVG/voronoi_raster//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/martin/Documents/skola/AVG/Voronizer/CMakeFiles /home/martin/Documents/skola/AVG/Voronizer//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/martin/Documents/skola/AVG/voronoi_raster/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/martin/Documents/skola/AVG/Voronizer/CMakeFiles 0
 .PHONY : all
 
 # The main clean target

@@ -37,7 +37,7 @@ bool str_to_colormap(string name, cv::ColormapTypes& output)
         {"twilight",cv::COLORMAP_TWILIGHT},
         {"twilight_shifted",cv::COLORMAP_TWILIGHT_SHIFTED},
         {"turbo",cv::COLORMAP_TURBO},
-        //{"deepgreen",cv::COLORMAP_DEEPGREEN}
+        {"deepgreen",cv::COLORMAP_DEEPGREEN}
     };
 
     auto it = m.find(name);
