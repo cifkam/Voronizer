@@ -3,8 +3,9 @@
 #include <functional>
 #include <filesystem>
 
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include <opencv4/opencv2/highgui.hpp>
+#include <opencv4/opencv2/imgproc.hpp>
+#include <opencv4/opencv2/features2d.hpp>
 #include <argparse/argparse.hpp>
 
 #include "clustering.hpp"
@@ -32,10 +33,6 @@ cv::Mat sobel_voronizer(
     data.convertTo(data, CV_16S);
     clustering.compute(data, data);
     
-    cv::Mat tmp;
-    data.convertTo(tmp, CV_8U);
-    imshow(tmp, "tmp");
-
     Voronoi voronoi;
     voronoi.groups = clustering.clear_groups();
     voronoi.compute(data, data, false);
@@ -101,7 +98,6 @@ bool run(const string& img_path, size_t treshold, const string& mode, bool cmap,
         cerr << "Could not open file" << endl;
         return false;
     }
-
 
     color_funct_t color_cmap_lambda   =   [&](const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)
         { return colorize_by_cmap(voronoi_output, cv::COLORMAP_TWILIGHT, true, random);};
