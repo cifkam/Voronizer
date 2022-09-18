@@ -52,6 +52,7 @@ void Separator::init_funct(set<Cell*>& opened, CellMat& cell_mat, cv::Mat& outpu
     if (cell == nullptr) return;
 
     cell->state = State::opened;
+    cout << n << ": " << cell->row << ", " << cell->col << endl;
     assign(output, n, cell);
     opened.insert(cell);
 }
@@ -62,17 +63,15 @@ void Separator::post_funct(std::vector<Cell*>& processed, cv::Mat& output)
     {
         for (auto cell : processed)
         {
-            output.at<int_t>(cell->row, cell->col) = 0;
+            assign(output, 0, cell);
             add_to_group(cell, 0);
         }
     }
     else
     {
         for (auto cell : processed)
-        {
-            int_t cls = output.at<int_t>(cell->row, cell->col);
-            add_to_group(cell, cls);
-        }
+            add_to_group(cell, n);
+        n++;
     }
     //TODO: grow neighbor regions to fill rejected areas OR just apply median filter that is big enough and then replace the values 
 }
@@ -130,7 +129,6 @@ size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_
         steps += s;
         if (s == 0)
             break;
-        n++; 
     }
 
     this->input_data = nullptr;

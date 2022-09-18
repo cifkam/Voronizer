@@ -66,7 +66,7 @@ public:
 protected:
     static constexpr size_t default_median_pre = 5;
     static constexpr size_t default_n_colors = 8;
-    static constexpr size_t default_cluster_size_treshold = 3;
+    static constexpr size_t default_cluster_size_treshold = 15;
 
     size_t median_pre;
     size_t n_colors;

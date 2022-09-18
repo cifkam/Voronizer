@@ -14,9 +14,11 @@
             "preLaunchTask": "${defaultBuildTask}",
             "args": [
                 "-i", "img/lena.jpg",
-                "-m", "sift", "-o", ",-1,1,0.99",
+                //"-m", "sift", "-o", ",-1,1,1.5", //keypoint treshold, radius, thickness, radius_multiplier
+                "-m", "kmeans", //"-o", ",3,", //median_pre, n_colors, cluster_size_treshold
                 "-c", "twilight",
-                "-s", "3"
+                "-s", "3",
+                //"-f", "output.png"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

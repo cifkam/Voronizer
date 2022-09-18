@@ -19,7 +19,7 @@ void AbstractVoronizer::unset_colormap()
 
 void AbstractVoronizer::set_colormap(cv::ColormapTypes cmap_type, bool random)
 {
-    colorize_funct = [&](const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)
+    colorize_funct = [cmap_type,random](const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)
     { return colorize_by_cmap(voronoi_output, cmap_type, true, random); };
 }
 
@@ -60,16 +60,13 @@ SobelVoronizer::SobelVoronizer(size_t median_pre, size_t edge_treshold, size_t m
 std::unique_ptr<SobelVoronizer> SobelVoronizer::create(const std::string& args)
 {
     auto vec = parse_args(args);
-
-    if (vec.size() == 0)
-        return make_unique<SobelVoronizer>();
     
     size_t median_pre = default_median_pre;
     size_t edge_treshold = default_edge_treshold;
     size_t median_post = default_median_post;
     size_t cluster_size_treshold = default_cluster_size_treshold;
     
-    if (/*vec.size() >= 1 &&*/ vec[0].size() != 0 && !tryParse<size_t>(vec[0], median_pre))
+    if (vec.size() >= 1 && vec[0].size() != 0 && !tryParse<size_t>(vec[0], median_pre))
         return nullptr;
     if (vec.size() >= 2 && vec[1].size() != 0 && !tryParse<size_t>(vec[1], edge_treshold))
         return nullptr;
@@ -92,12 +89,12 @@ cv::Mat SobelVoronizer::run(cv::Mat& input)
     cv::threshold(data, data, edge_treshold, 255, cv::THRESH_BINARY);
     cv::medianBlur(data, data, median_post);
 
-    Separator clustering(cluster_size_treshold, 0);
+    Separator separator(cluster_size_treshold, 0);
     data.convertTo(data, CV_16S);
-    clustering.compute(data, data);
+    separator.compute(data, data);
     
     Voronoi voronoi;
-    voronoi.groups = clustering.clear_groups();
+    voronoi.groups = separator.clear_groups();
     voronoi.compute(data, data, false);
 
     auto groups = voronoi.clear_groups();
@@ -118,14 +115,11 @@ std::unique_ptr<KMeansVoronizer> KMeansVoronizer::create(const std::string& args
 {
     auto vec = parse_args(args);
 
-    if (vec.size() == 0)
-        return make_unique<KMeansVoronizer>();
-    
     size_t median_pre = default_median_pre;
     size_t n_colors = default_n_colors;
     size_t cluster_size_treshold = default_cluster_size_treshold;
     
-    if (/*vec.size() >= 1 &&*/ vec[0].size() != 0 && !tryParse<size_t>(vec[0], median_pre))
+    if (vec.size() >= 1 && vec[0].size() != 0 && !tryParse<size_t>(vec[0], median_pre))
         return nullptr;
     if (vec.size() >= 2 && vec[1].size() != 0 && !tryParse<size_t>(vec[1], n_colors))
         return nullptr;
@@ -143,12 +137,12 @@ cv::Mat KMeansVoronizer::run(cv::Mat& input)
     cv::medianBlur(input, data, median_pre); // apply median filter to speed-up the process and remove small regions
     kmeans_color(data, data, n_colors);
     cv::cvtColor(data, data, cv::COLOR_RGB2GRAY);
-    random_LUT(data, data);
+    //random_LUT(data, data);
 
-    Separator clustering(cluster_size_treshold, -1);
+    Separator separator(cluster_size_treshold, -1);
     data.convertTo(data, CV_16S);
-    clustering.compute(data, data);
-    auto groups = clustering.clear_groups();
+    separator.compute(data, data);
+    auto groups = separator.clear_groups();
     groups.erase(0);
     
     cv::Mat im = cv::Mat::zeros(input.size(), CV_16S);
@@ -189,15 +183,12 @@ std::unique_ptr<SIFTVoronizer> SIFTVoronizer::create(const std::string& args)
 {
     auto vec = parse_args(args);
 
-    if (vec.size() == 0)
-        return make_unique<SIFTVoronizer>();
-    
     size_t keypoint_size_treshold = default_keypoint_size_treshold;
     int radius = default_radius; 
     int thickness = default_thickness;
     float radius_multiplier = default_radius_multiplier;
     
-    if (/*vec.size() >= 1 &&*/ vec[0].size() != 0 && !tryParse<size_t>(vec[0], keypoint_size_treshold))
+    if (vec.size() >= 1 && vec[0].size() != 0 && !tryParse<size_t>(vec[0], keypoint_size_treshold))
         return nullptr;
     if (vec.size() >= 2 && vec[1].size() != 0 && !tryParse<int>(vec[1], radius))
         return nullptr;

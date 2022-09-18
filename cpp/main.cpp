@@ -30,7 +30,7 @@ void help_exit(const string& message, int exitcode=1)
 }
 
 
-bool run(const string& img_path, const string& mode, bool cmap, cv::ColormapTypes cmap_type, bool random, uint smooth, const string& options)
+bool run(const string& img_path, const string& mode, const string& options, bool cmap, cv::ColormapTypes cmap_type, bool random, uint smooth, const string& output_file)
 {
     cv::Mat img = cv::imread(img_path, cv::IMREAD_COLOR);
     cv::Mat data;
@@ -41,13 +41,6 @@ bool run(const string& img_path, const string& mode, bool cmap, cv::ColormapType
         return false;
     }
 
-
-    color_funct_t color_cmap_lambda   =   [&](const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)
-        { return colorize_by_cmap(voronoi_output, cmap_type, true, random);};
-    color_funct_t color_template_lambda = [&](const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)
-        { return colorize_by_template(input, voronoi_groups);};
-        
-    color_funct_t color_lambda = cmap ? color_cmap_lambda : color_template_lambda;
     cv::Mat result(img.size(), CV_8UC3);
     
     unique_ptr<AbstractVoronizer> voronizer;
@@ -69,8 +62,12 @@ bool run(const string& img_path, const string& mode, bool cmap, cv::ColormapType
     
     if (smooth > 0)
         smoothEdges(result, result, 9, smooth);
-    
-    imshow(result, "result");
+
+
+    if (output_file != "")
+        cv::imwrite(output_file, result);
+    else
+        imshow(result, "result");
     return true;
 }
 
@@ -78,25 +75,6 @@ bool run(const string& img_path, const string& mode, bool cmap, cv::ColormapType
 #include <cassert>
 int main( int argc, char** argv)
 {
-    //SIFTVoronizer(size_t kp_size_tresh, int radius, int thickness, float radius_mult)
-    /*assert(SIFTVoronizer::create("") != nullptr);
-
-    assert(SIFTVoronizer::create(",") != nullptr);
-    assert(SIFTVoronizer::create(",,") != nullptr);
-    assert(SIFTVoronizer::create(",,,") != nullptr);
-    assert(SIFTVoronizer::create(",,,,") == nullptr);
-
-    assert(SIFTVoronizer::create("0,") != nullptr);
-    assert(SIFTVoronizer::create("1") != nullptr);
-    assert(SIFTVoronizer::create("-1") == nullptr);
-    assert(SIFTVoronizer::create("a") == nullptr);
-
-    assert(SIFTVoronizer::create("1.0,") == nullptr);
-    assert(SIFTVoronizer::create("1,-1,33,") != nullptr);
-    assert(SIFTVoronizer::create("1,-1,33,1.5") != nullptr);
-    assert(SIFTVoronizer::create("1,-1,,1.5") != nullptr);*/
-
-
     args = argparse::ArgumentParser("Voronoizer", "1.0");
     args.add_argument("-i", "--img")
         .help("path to image to voronize")
@@ -119,7 +97,7 @@ int main( int argc, char** argv)
         .help("OpenCV colormap name to use instead of original image as template: {autumn, bone, jet, winter, rainbow, ocean, summer, spring, cool, hsv, pink, hot, parula, magma, inferno, plasma, viridis, cividis, twilight, twilight_shifted, turbo}")
         .default_value<string>("");
 
-    args.add_argument("-f", "--file") //TODO: implement
+    args.add_argument("-f", "--file")
         .help("Write output to file instead of displaying it in a window")
         .default_value<string>("");
 
@@ -156,6 +134,7 @@ int main( int argc, char** argv)
     uint smooth = args.get<uint>("-s");
     string img_path = args.get("-i");
     string options = args.get("-o");
+    string output_file = args.get("-f");
 
     if (!fs::exists(img_path) || fs::is_directory(img_path))
         help_exit("File does not exist: " + img_path);
@@ -164,7 +143,7 @@ int main( int argc, char** argv)
     if (cmap && !str_to_colormap(args.get<string>("-c"), cmap_type))
         help_exit("Unrecognized colormap: " + args.get<string>("-c"));
 
-    run(img_path, mode, cmap, cmap_type, random, smooth, options);
+    run(img_path, mode, options, cmap, cmap_type, random, smooth, output_file);
 
     return 0;
 }
