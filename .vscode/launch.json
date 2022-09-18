@@ -14,8 +14,7 @@
             "preLaunchTask": "${defaultBuildTask}",
             "args": [
                 "-i", "img/lena.jpg",
-                "-t", "15",
-                "-m", "sobel",
+                "-m", "sift", "-o", ",-1,1,0.99",
                 "-c", "twilight",
                 "-s", "3"
             ],

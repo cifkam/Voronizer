@@ -8,7 +8,7 @@
 #include <map>
 
 
-
+typedef int16_t int_t;
 enum Neighborhood {n4, n8, swap};
 enum State {unseen, opened, closed};
 
@@ -22,7 +22,6 @@ struct Cell
     State state;
 };
 
-typedef int16_t int_t;
 typedef std::map<int, std::vector<Cell*>> Groups;
 typedef std::vector<std::vector<Cell>> CellMat;
 

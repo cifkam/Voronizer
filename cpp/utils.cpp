@@ -1,9 +1,21 @@
 #include "utils.hpp"
 #include <map>
-#include <opencv2/highgui.hpp>
 #include <iostream>
+#include <opencv2/highgui.hpp>
 
 using namespace std;
+
+template <>
+typename std::enable_if<std::is_unsigned<bool>::value, bool>::type tryParse(const std::string& s, bool& output)
+{
+    if (s == "true")
+        output = true;
+    else if (s == "false")
+        output = false;
+    else
+        return false;
+    return true;
+}
 
 void str_lower(string& data)
 {
@@ -60,6 +72,7 @@ void waitKey()
         //           alt-gr             shift         left-ctrl         right-ctrl        caps-lock               alt
     }
 }
+
 
 
 cv::ColormapTypes string_to_colormap(string name);

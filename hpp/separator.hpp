@@ -5,10 +5,10 @@
 #include "growing.hpp"
 #include <opencv2/core.hpp>
 
-class Clustering : public Growing
+class Separator : public Growing
 {
 public:
-    Clustering(size_t treshold = 50, int bg_value = 0);
+    Separator(size_t treshold = 50, int bg_value = 0);
     virtual size_t compute(cv::Mat& data, cv::Mat& output, bool clear_groups = true) override;
     size_t treshold;
     int bg_value;

@@ -1,14 +1,14 @@
-#include "clustering.hpp"
+#include "separator.hpp"
 #include <iostream>
 using namespace std;
 
-Clustering::Clustering(size_t treshold, int bg_value)
+Separator::Separator(size_t treshold, int bg_value)
 : Growing(Neighborhood::n4), treshold(treshold), bg_value(bg_value)
 {
 
 }
 
-void Clustering::add_to_group(Cell* cell, int cls)
+void Separator::add_to_group(Cell* cell, int cls)
 {
     auto it = groups.find(cls);
     if (it == groups.end())
@@ -17,7 +17,7 @@ void Clustering::add_to_group(Cell* cell, int cls)
         it->second.push_back(cell); //found
 }
 
-void Clustering::init_funct(set<Cell*>& opened, CellMat& cell_mat, cv::Mat& output)
+void Separator::init_funct(set<Cell*>& opened, CellMat& cell_mat, cv::Mat& output)
 {
     cell_mat = this->cell_mat; // restore cell_mat from previous iteration
     Cell* cell = nullptr;
@@ -56,7 +56,7 @@ void Clustering::init_funct(set<Cell*>& opened, CellMat& cell_mat, cv::Mat& outp
     opened.insert(cell);
 }
 
-void Clustering::post_funct(std::vector<Cell*>& processed, cv::Mat& output)
+void Separator::post_funct(std::vector<Cell*>& processed, cv::Mat& output)
 {
     if (processed.size() < treshold)
     {
@@ -78,14 +78,14 @@ void Clustering::post_funct(std::vector<Cell*>& processed, cv::Mat& output)
 }
 
 
-bool Clustering::grow_condition(const cv::Mat& input_data, const cv::Mat& data, Cell* cell, Cell* neighbor)
+bool Separator::grow_condition(const cv::Mat& input_data, const cv::Mat& data, Cell* cell, Cell* neighbor)
 {
     return (neighbor->state == State::unseen) && (this->input_data->at<int_t>(cell->row,cell->col) == this->input_data->at<int_t>(neighbor->row, neighbor->col));   
 }
 
 
 
-size_t Clustering::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_groups)
+size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_groups)
 {
     if (clear_groups)
         this->clear_groups();

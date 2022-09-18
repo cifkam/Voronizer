@@ -2,93 +2,35 @@
 #include <chrono>
 #include <functional>
 #include <filesystem>
+#include <algorithm>
+#include <unordered_set>
+#include <memory>
 
 #include <opencv4/opencv2/highgui.hpp>
 #include <opencv4/opencv2/imgproc.hpp>
 #include <opencv4/opencv2/features2d.hpp>
 #include <argparse/argparse.hpp>
 
-#include "clustering.hpp"
+#include "separator.hpp"
 #include "voronoi.hpp"
 #include "utils.hpp"
+#include "voronizer.hpp"
 
 using namespace std;
 namespace fs = std::filesystem;
 typedef function<cv::Mat(const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)> color_funct_t;
 
-cv::Mat sobel_voronizer(
-    cv::Mat& input,
-    color_funct_t colorize_funct,
-    size_t treshold = 15
-){
-    
-    cv::Mat data;
-    cv::cvtColor(input, data, cv::COLOR_RGB2GRAY);
-    cv::medianBlur(data, data, 7);
-    cv::Sobel(data, data, CV_8U, 1, 1, 5, 1.0);
-    cv::threshold(data, data, 30, 255, cv::THRESH_BINARY); //TODO: add treshold as parameter
-    cv::medianBlur(data, data, 5);
+argparse::ArgumentParser args;
 
-    Clustering clustering(treshold);
-    data.convertTo(data, CV_16S);
-    clustering.compute(data, data);
-    
-    Voronoi voronoi;
-    voronoi.groups = clustering.clear_groups();
-    voronoi.compute(data, data, false);
-    auto groups = voronoi.clear_groups();
 
-    return colorize_funct(input, data, groups);
-}
-
-cv::Mat kmeans_voronizer(
-    const cv::Mat& input,
-    color_funct_t colorize_funct,
-    size_t n_colors = 10,
-    size_t treshold = 3
-){
-    cv::Mat data2;
-    cv::Mat data;
-    cv::medianBlur(input, data2, 5); // apply median filter to speed-up the process and remove small regions
-    kmeans_color(data2, data, n_colors);
-    cv::cvtColor(data, data, cv::COLOR_RGB2GRAY);
-    random_LUT(data, data);
-
-    Clustering clustering(treshold, -1);
-    data.convertTo(data, CV_16S);
-    clustering.compute(data, data);
-    auto groups = clustering.clear_groups();
-    groups.erase(0);
-    
-    cv::Mat im = cv::Mat::zeros(input.size(), CV_16S);
-    for (auto& group : groups)
-    {
-        size_t row = 0;
-        size_t col = 0;
-        for (auto& cell : group.second)
-        {
-            row += cell->row;
-            col += cell->col;
-        }
-        row /= group.second.size();
-        col /= group.second.size();
-        im.at<int16_t>(row,col) = group.first;
-    }
-
-    Voronoi voronoi;
-    voronoi.compute(im, im);
-    groups = voronoi.clear_groups();
-    return colorize_funct(input, im, groups);
-}
-
-void help_exit(const string& message, const argparse::ArgumentParser args, int exitcode=1)
+void help_exit(const string& message, int exitcode=1)
 {
     cerr << message << endl << args;
     exit(exitcode);
 }
 
 
-bool run(const string& img_path, size_t treshold, const string& mode, bool cmap, cv::ColormapTypes cmap_type, bool random, uint smooth)
+bool run(const string& img_path, const string& mode, bool cmap, cv::ColormapTypes cmap_type, bool random, uint smooth, const string& options)
 {
     cv::Mat img = cv::imread(img_path, cv::IMREAD_COLOR);
     cv::Mat data;
@@ -99,27 +41,32 @@ bool run(const string& img_path, size_t treshold, const string& mode, bool cmap,
         return false;
     }
 
+
     color_funct_t color_cmap_lambda   =   [&](const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)
-        { return colorize_by_cmap(voronoi_output, cv::COLORMAP_TWILIGHT, true, random);};
+        { return colorize_by_cmap(voronoi_output, cmap_type, true, random);};
     color_funct_t color_template_lambda = [&](const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)
         { return colorize_by_template(input, voronoi_groups);};
         
     color_funct_t color_lambda = cmap ? color_cmap_lambda : color_template_lambda;
     cv::Mat result(img.size(), CV_8UC3);
+    
+    unique_ptr<AbstractVoronizer> voronizer;
     if (mode == "sobel")
-    {
-        result = sobel_voronizer(img, color_lambda, treshold);
-
-    }
+        voronizer = SobelVoronizer::create(options);
     else if (mode == "kmeans")
-    {
-        result = kmeans_voronizer(img, color_lambda);
-    }
+        voronizer = KMeansVoronizer::create(options);
+    else if (mode == "sift")
+        voronizer = SIFTVoronizer::create(options);
     else
-    {
         throw logic_error("Mode not yet implemented");
-    }
 
+    if (voronizer == nullptr)
+        help_exit("Couldn't parse options");
+
+    if (cmap)
+        voronizer->set_colormap(cmap_type, random);
+    result = voronizer->run(img); 
+    
     if (smooth > 0)
         smoothEdges(result, result, 9, smooth);
     
@@ -128,39 +75,70 @@ bool run(const string& img_path, size_t treshold, const string& mode, bool cmap,
 }
 
 
-
+#include <cassert>
 int main( int argc, char** argv)
 {
-    argparse::ArgumentParser args("Voronoizer", "1.0");
+    //SIFTVoronizer(size_t kp_size_tresh, int radius, int thickness, float radius_mult)
+    /*assert(SIFTVoronizer::create("") != nullptr);
+
+    assert(SIFTVoronizer::create(",") != nullptr);
+    assert(SIFTVoronizer::create(",,") != nullptr);
+    assert(SIFTVoronizer::create(",,,") != nullptr);
+    assert(SIFTVoronizer::create(",,,,") == nullptr);
+
+    assert(SIFTVoronizer::create("0,") != nullptr);
+    assert(SIFTVoronizer::create("1") != nullptr);
+    assert(SIFTVoronizer::create("-1") == nullptr);
+    assert(SIFTVoronizer::create("a") == nullptr);
+
+    assert(SIFTVoronizer::create("1.0,") == nullptr);
+    assert(SIFTVoronizer::create("1,-1,33,") != nullptr);
+    assert(SIFTVoronizer::create("1,-1,33,1.5") != nullptr);
+    assert(SIFTVoronizer::create("1,-1,,1.5") != nullptr);*/
+
+
+    args = argparse::ArgumentParser("Voronoizer", "1.0");
     args.add_argument("-i", "--img")
         .help("path to image to voronize")
         .required();
 
+    unordered_set<string> modes = {"sobel", "kmeans", "sift"};
     args.add_argument("-m", "--mode")
-        .help("voronizer mode: {sobel, kmeans}\n\t\t\"sobel\": ...\n\t\t\"kmeans: ...\"\n\t\t")
+        .help("voronizer mode: {sobel, kmeans, sift}\n"
+        "\t\t   sobel:  ...\n"
+        "\t\t      options: \n"
+        "\t\t   kmeans: ...\n"
+        "\t\t      options: \n"
+        "\t\t   sift:   ...\n"
+        "\t\t      options: \n"
+        "\t\t")
         .default_value<string>("sobel")
         .required();
 
     args.add_argument("-c", "--colormap")
-        .help("cv2 colormap name to use instead of original image as template: {autumn, bone, jet, winter, rainbow, ocean, summer, spring, cool, hsv, pink, hot, parula, magma, inferno, plasma, viridis, cividis, twilight, twilight_shifted, turbo}")
+        .help("OpenCV colormap name to use instead of original image as template: {autumn, bone, jet, winter, rainbow, ocean, summer, spring, cool, hsv, pink, hot, parula, magma, inferno, plasma, viridis, cividis, twilight, twilight_shifted, turbo}")
+        .default_value<string>("");
+
+    args.add_argument("-f", "--file") //TODO: implement
+        .help("Write output to file instead of displaying it in a window")
         .default_value<string>("");
 
     args.add_argument("-r", "--random")
-        .help("has effect only if using colormap: shuffle colors of areas randomly, otherwise color will depend on x and y coordinate of area")
+        .help("Has effect only if using colormap: shuffle colors of areas randomly, otherwise color will depend on x and y coordinate of area")
         .default_value(false)
         .implicit_value(true);
 
     args.add_argument("-s", "--smooth")
-        .help("smooth edges")
-        .default_value((uint)3)
+        .help("Strength of edges smoothing")
+        .default_value<uint>(3)
         .required()
         .scan<'u', uint>();
 
-    args.add_argument("-t", "--treshold")
-        .help("ignore areas with number of pixels less than treshold")
-        .default_value((uint)0)
-        .required()
-        .scan<'u', uint>();
+    args.add_argument("-o", "--options") //TODO: implement
+        .help("Comma separated list of mode-specific positional options."
+        "\n\t\tSupports truncated list as well as using default value by omitting the value"
+        "\n\t\t(e.g. \"-o ,,0.5\" will result in setting the third option to 0.5, all other options will keep their default values.)")        
+        .default_value<string>("");
 
     try
     {
@@ -168,27 +146,25 @@ int main( int argc, char** argv)
     }
     catch (const exception& err)
     {
-        help_exit(err.what(), args);
+        help_exit(err.what());
     }
 
-    string mode = args.get("-m"); 
+    string mode = args.get("-m");
     bool cmap = (args.get("-c") != "");
     cv::ColormapTypes cmap_type;
     bool random = args.get<bool>("-r");
     uint smooth = args.get<uint>("-s");
-    uint treshold = args.get<uint>("-t");
     string img_path = args.get("-i");
+    string options = args.get("-o");
 
     if (!fs::exists(img_path) || fs::is_directory(img_path))
-        help_exit("File does not exist: " + img_path, args);
-    if (mode != "sobel" && mode != "kmeans")
-        help_exit("Unrecognized mode: " + mode, args);
-    if (treshold < 0)
-        help_exit("Treshold must be nonnegative integer, found: " + to_string(treshold), args);
+        help_exit("File does not exist: " + img_path);
+    if (modes.find(mode) == modes.end())
+        help_exit("Unrecognized mode: " + mode);
     if (cmap && !str_to_colormap(args.get<string>("-c"), cmap_type))
-        help_exit("Unrecognized colormap: " + args.get<string>("-c"), args);
+        help_exit("Unrecognized colormap: " + args.get<string>("-c"));
 
-    run(img_path, treshold, mode, cmap, cmap_type, random, smooth);
+    run(img_path, mode, cmap, cmap_type, random, smooth, options);
 
     return 0;
 }

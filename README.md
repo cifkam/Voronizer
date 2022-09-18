@@ -3,5 +3,5 @@
 ## Build
 Requires OpenCV >= 4.4.0
 ```
-cmake . && make
+cmake -DCMAKE_BUILD_TYPE=Release . && make
 ```
