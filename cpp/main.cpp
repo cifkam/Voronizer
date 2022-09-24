@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <memory>
 #include <sstream>
+#include <algorithm>
 
 #include <opencv4/opencv2/highgui.hpp>
 #include <opencv4/opencv2/imgproc.hpp>
@@ -83,11 +84,11 @@ int main( int argc, char** argv)
         .help("path to image to voronize")
         .required();
 
-    unordered_set<string> modes = {"sobel", "kmeans-circles", "kmeans-lines", "sift-circles", "sift-lines"};
+    vector<string> modes = {"sobel", "kmeans-circles", "kmeans-lines", "sift-circles", "sift-lines"};
     //.append(",=").append(to_string())
     stringstream ss;
     ss <<
-        "voronizer mode: {sobel, kmeans, sift}\n"
+        "voronizer mode: " << to_string(modes) << "\n"
         "\n"
         "\t\t   sobel:  options ["
                 <<  "MEDIAN_PRE=" << to_string(SobelVoronizer::default_median_pre)
@@ -113,7 +114,8 @@ int main( int argc, char** argv)
         "\t\t      1. preprocess image by median filter of size MEDIAN_PRE\n"
         "\t\t      2. quantize the image to N_COLORS by KMeans\n"
         "\t\t      3. split the clusters into compact regions of pixels with the same color and remove any with less than CLUSTER_SIZE_TRESHOLD pixels\n"
-        "\t\t      4. use centers of mass of the regions as centers of generator circles with given RADIUS (0 for points instead of circles) and THICKNESS (-1 to fill the circles)\n"
+        "\t\t      4. use centers of mass of the regions as centers of generator circles with given RADIUS (0 for points instead of circles)\n"
+        "\t\t         and THICKNESS (-1 to fill the circles)\n"
         "\n"
         "\t\t   kmeans-lines:  options ["
                 <<  "MEDIAN_PRE=" << to_string(KMeansVoronizerLines::default_median_pre)
@@ -123,7 +125,8 @@ int main( int argc, char** argv)
                 << "]\n"
         "\t\t      Generators created by KMeans color clustering - generators are lines where endpoints are centers of  mass of regions found by KMeans:\n"
         "\t\t      1. - 4. same as \"kmeans-circles\"\n"
-        "\t\t      5. use centers of mass of the regions as endpoints of line segment generators - for each point try RANDOM_ITER other (unused) points and select the closest one to create new line segment\n"
+        "\t\t      5. use centers of mass of the regions as endpoints of line segment generators\n"
+        "\t\t          - for each point try RANDOM_ITER other (unused) points and select the closest one to create new line segment\n"
         "\n"
         "\t\t   sift-circles:  options ["
                     <<  "KEYPOINT_SIZE_TRESHOLD=" << to_string(SIFTVoronizerCircles::default_keypoint_size_treshold)
@@ -134,7 +137,8 @@ int main( int argc, char** argv)
         "\t\t      Generators are points/circles created from SIFT keypoints:\n"
         "\t\t      1. Detect SIFT keypoints of the image\n"
         "\t\t      2. Filter out keypoints of size less than KEYPOINT_SIZE_TRESHOLD\n"
-        "\t\t      3. Create generator circles at selected keypoints with given RADIUS (0 for points instead of circles) and THICKNESS (-1 to fill the circles). You can also use RADIUS = -1 for radius given by size of SIFT keypoints, which can be adjusted by RADIUS_MULTIPLIER\n"
+        "\t\t      3. Create generator circles at selected keypoints with given RADIUS (0 for points instead of circles) and THICKNESS (-1 to fill the circles).\n"
+        "\t\t         You can also use RADIUS = -1 for radius given by size of SIFT keypoints, which can be adjusted by RADIUS_MULTIPLIER\n"
         "\t\t         (RADIUS_MULTIPLIER is ignored in case of RADIUS >= 0)\n"
         "\n"
         "\t\t   sift-lines:  options ["
@@ -143,7 +147,8 @@ int main( int argc, char** argv)
                     << "]\n"
         "\t\t      Generators created with SIFT keypoints - generators are lines where endpoints are SIFT keypoints:\n"
         "\t\t      1. - 2. same as \"sift-circles\"\n"
-        "\t\t      3. use selected SIFT keypoints as endpoints of line segment generators - for each point try RANDOM_ITER other (unused) points and select the closest one to create new line segment\n"
+        "\t\t      3. use selected SIFT keypoints as endpoints of line segment generators - for each point try RANDOM_ITER other (unused) points\n"
+        "\t\t         and select the closest one to create new line segment\n"
         "\t\t";
     args.add_argument("-m", "--mode")
         .help(ss.str())
@@ -197,7 +202,7 @@ int main( int argc, char** argv)
 
     if (!fs::exists(img_path) || fs::is_directory(img_path))
         help_exit("File does not exist: " + img_path);
-    if (modes.find(mode) == modes.end())
+    if (std::find(modes.begin(), modes.end(), mode) == modes.end())
         help_exit("Unrecognized mode: " + mode);
     if (cmap && !strToColormap(args.get<string>("-c"), cmap_type))
         help_exit("Unrecognized colormap: " + args.get<string>("-c"));

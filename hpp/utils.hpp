@@ -5,10 +5,12 @@
 #include <type_traits>
 #include <limits>
 #include <random>
+#include <vector>
+#include <sstream>
 
 #include <opencv2/imgproc.hpp>
-#include "growing.hpp"
 
+#include "growing.hpp"
 
 
 
@@ -84,6 +86,21 @@ typename std::enable_if<!std::is_unsigned<T>::value, bool>::type tryParse(const 
         return false;
     }
 }
+
+template <typename T>
+std::string to_string(const std::vector<T>& vec)
+{
+	if (vec.size() == 0)
+		return "{}";
+
+	std::stringstream ss;
+	ss << "{";
+	for (int i = 0; i < vec.size()-1; ++i)
+		ss << vec[i] << ", ";
+	ss << vec[vec.size()-1] << "}"; 
+	return ss.str();
+}
+
 
 
 #endif /* UTILS_HPP */
