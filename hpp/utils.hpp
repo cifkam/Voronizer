@@ -3,27 +3,32 @@
 #include <string>
 #include <sstream>
 #include <type_traits>
+#include <limits>
+#include <random>
+
 #include <opencv2/imgproc.hpp>
 #include "growing.hpp"
+
+
 
 
 #include <chrono>
 #include <functional>
 template <typename units = std::chrono::milliseconds, typename clock = std::chrono::steady_clock>
-int64_t measure_time(std::function<void(void)> fun);
+int64_t measureTime(std::function<void(void)> fun);
 
 
 
 void waitKey();
-bool str_to_colormap(std::string name, cv::ColormapTypes& output);
+bool strToColormap(std::string name, cv::ColormapTypes& output);
 void imshow(const cv::Mat& image, const std::string& winname = "", bool wait_key = true);
-void random_LUT(const cv::Mat& src, cv::Mat& dst);
+void randomLUT(const cv::Mat& src, cv::Mat& dst);
 void smoothEdges(cv::InputArray src, cv::OutputArray dst, int ksize=9, int iter=3);
-cv::Mat colorize_by_cmap(const cv::Mat& input, cv::ColormapTypes map = cv::COLORMAP_TWILIGHT, bool copy = true, bool apply_random_LUT = false);
-cv::Mat colorize_by_template(const cv::Mat& color_template, const Groups& voronoi_groups);
-void kmeans_color(cv::Mat ocv, cv::Mat& output, int K);
+cv::Mat colorizeByCmap(const cv::Mat& input, cv::ColormapTypes map = cv::COLORMAP_TWILIGHT, bool copy = true, bool apply_random_LUT = false);
+cv::Mat colorizeByTemplate(const cv::Mat& color_template, const Groups& voronoi_groups);
+void kmeansColor(cv::Mat ocv, cv::Mat& output, int K);
 
-
+cv::Mat linesFromClosestPointsRandom(std::vector<cv::Point2f>& pts, cv::Size image_size, size_t iter, size_t pts_left_out = 3);
 
 
 template <typename T>

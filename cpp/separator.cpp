@@ -52,7 +52,6 @@ void Separator::init_funct(set<Cell*>& opened, CellMat& cell_mat, cv::Mat& outpu
     if (cell == nullptr) return;
 
     cell->state = State::opened;
-    cout << n << ": " << cell->row << ", " << cell->col << endl;
     assign(output, n, cell);
     opened.insert(cell);
 }
@@ -117,7 +116,7 @@ size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_
         {
             cell_mat[row][col].row = row;
             cell_mat[row][col].col = col;
-            cell_mat[row][col].state = (data.at<int_t>(row,col) < 0 ? //== 0 ?
+            cell_mat[row][col].state = (data.at<int_t>(row,col) < 0 ?
                 State::unseen : State::closed);
         }
 

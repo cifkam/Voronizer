@@ -1,4 +1,9 @@
 #include "voronizer.hpp"
+
+#include <limits>
+#include <random>
+#include <iostream>
+
 #include "utils.hpp"
 #include "separator.hpp"
 #include "voronoi.hpp"
@@ -13,14 +18,14 @@ AbstractVoronizer::AbstractVoronizer()
 void AbstractVoronizer::unset_colormap()
 {
     colorize_funct = [&](const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)
-    { return colorize_by_template(input, voronoi_groups); };
+    { return colorizeByTemplate(input, voronoi_groups); };
 }
 
 
 void AbstractVoronizer::set_colormap(cv::ColormapTypes cmap_type, bool random)
 {
     colorize_funct = [cmap_type,random](const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)
-    { return colorize_by_cmap(voronoi_output, cmap_type, true, random); };
+    { return colorizeByCmap(voronoi_output, cmap_type, true, random); };
 }
 
 
@@ -104,14 +109,51 @@ cv::Mat SobelVoronizer::run(cv::Mat& input)
 
 
 /* --- kmeans --- */
-KMeansVoronizer::KMeansVoronizer(size_t median_pre, size_t n_colors, size_t cluster_size_treshold)
+AbstractKMeansVoronizer::AbstractKMeansVoronizer(size_t median_pre, size_t n_colors, size_t cluster_size_treshold)
 {
     this->median_pre = median_pre;
     this->n_colors = n_colors;
     this->cluster_size_treshold = cluster_size_treshold;
 }
+KMeansVoronizerCircles::KMeansVoronizerCircles(size_t median_pre, size_t n_colors, size_t cluster_size_treshold, size_t radius, int thickness)
+: AbstractKMeansVoronizer(median_pre, n_colors, cluster_size_treshold)
+{
+    this->radius = radius;
+    this->thickness = thickness;
+}
+KMeansVoronizerLines::KMeansVoronizerLines(size_t median_pre, size_t n_colors, size_t cluster_size_treshold, size_t random_iter)
+: AbstractKMeansVoronizer(median_pre, n_colors, cluster_size_treshold) 
+{
+    this->n_iter = random_iter;
+}
 
-std::unique_ptr<KMeansVoronizer> KMeansVoronizer::create(const std::string& args)
+std::unique_ptr<KMeansVoronizerCircles> KMeansVoronizerCircles::create(const std::string& args)
+{
+    auto vec = parse_args(args);
+
+    size_t median_pre = default_median_pre;
+    size_t n_colors = default_n_colors;
+    size_t cluster_size_treshold = default_cluster_size_treshold;
+    size_t radius = default_radius;
+    int thickness = default_thickness;
+    
+    if (vec.size() >= 1 && vec[0].size() != 0 && !tryParse<size_t>(vec[0], median_pre))
+        return nullptr;
+    if (vec.size() >= 2 && vec[1].size() != 0 && !tryParse<size_t>(vec[1], n_colors))
+        return nullptr;
+    if (vec.size() >= 3 && vec[2].size() != 0 && !tryParse<size_t>(vec[2], cluster_size_treshold))
+        return nullptr;
+    if (vec.size() >= 4 && vec[3].size() != 0 && !tryParse<size_t>(vec[3], radius))
+        return nullptr;
+    if (vec.size() >= 5 && vec[4].size() != 0 && !tryParse<int>(vec[4], thickness))
+        return nullptr;
+    if (vec.size() >= 6)
+        return nullptr;
+    
+    return make_unique<KMeansVoronizerCircles>(median_pre, n_colors, cluster_size_treshold);
+}
+
+std::unique_ptr<KMeansVoronizerLines> KMeansVoronizerLines::create(const std::string& args)
 {
     auto vec = parse_args(args);
 
@@ -128,16 +170,16 @@ std::unique_ptr<KMeansVoronizer> KMeansVoronizer::create(const std::string& args
     if (vec.size() >= 4)
         return nullptr;
     
-    return make_unique<KMeansVoronizer>(median_pre, n_colors, cluster_size_treshold);
+    return make_unique<KMeansVoronizerLines>(median_pre, n_colors, cluster_size_treshold);
+
 }
 
-cv::Mat KMeansVoronizer::run(cv::Mat& input)
+cv::Mat AbstractKMeansVoronizer::run(cv::Mat& input)
 {
     cv::Mat data;
     cv::medianBlur(input, data, median_pre); // apply median filter to speed-up the process and remove small regions
-    kmeans_color(data, data, n_colors);
+    kmeansColor(data, data, n_colors);
     cv::cvtColor(data, data, cv::COLOR_RGB2GRAY);
-    //random_LUT(data, data);
 
     Separator separator(cluster_size_treshold, -1);
     data.convertTo(data, CV_16S);
@@ -145,7 +187,18 @@ cv::Mat KMeansVoronizer::run(cv::Mat& input)
     auto groups = separator.clear_groups();
     groups.erase(0);
     
-    cv::Mat im = cv::Mat::zeros(input.size(), CV_16S);
+    cv::Mat im = drawGenerators(groups, input.size());
+
+    Voronoi voronoi;
+    voronoi.compute(im, im);
+
+    groups = voronoi.clear_groups();
+    return colorize_funct(input, im, groups);
+}
+
+cv::Mat KMeansVoronizerCircles::drawGenerators(const Groups& groups, cv::Size image_size)
+{
+    cv::Mat im = cv::Mat::zeros(image_size, CV_16S);
     for (auto& group : groups)
     {
         size_t row = 0;
@@ -159,27 +212,77 @@ cv::Mat KMeansVoronizer::run(cv::Mat& input)
         col /= group.second.size();
         im.at<int16_t>(row,col) = group.first;
     }
-
-    Voronoi voronoi;
-    voronoi.compute(im, im);
-
-    groups = voronoi.clear_groups();
-    return colorize_funct(input, im, groups);
+    return im;
 }
 
 
+cv::Mat KMeansVoronizerLines::drawGenerators(const Groups& groups, cv::Size image_size)
+{
+    std::vector<cv::Point2f> points;
+    points.reserve(groups.size());
+    for (auto& group : groups)
+    {
+        size_t row = 0;
+        size_t col = 0;
+        for (auto& cell : group.second)
+        {
+            row += cell->row;
+            col += cell->col;
+        }
+        row /= group.second.size();
+        col /= group.second.size();
+        points.push_back(cv::Point2f(row,col));
+    }
+
+    return linesFromClosestPointsRandom(points, image_size, n_iter); //TODO: add n_iter
+}
 
 /* --- sift --- */
-SIFTVoronizer::SIFTVoronizer(size_t keypoint_size_treshold, int radius, int thickness, float radius_multiplier)
+cv::Mat AbstractSIFTVoronizer::run(cv::Mat& input)
+{
+    auto detector = cv::SIFT::create(0, 3, 0.03, 10, 1.6);
+    std::vector<cv::KeyPoint> keypoints;
+    detector->detect(input, keypoints);
+
+    keypoints.erase(std::remove_if(keypoints.begin(), keypoints.end(),
+        [&](cv::KeyPoint x){return x.size < keypoint_size_treshold;}),
+    keypoints.end());
+
+    cv::Mat data = drawGenerators(keypoints, input.size());
+
+    /* */ // TOTO: Show generators 
+    cv::Mat m(data);
+    for (int r = 0; r < m.rows; ++r)
+        for (int c = 0; c < m.cols; ++c)
+            m.at<int16_t>(r,c) %= 256;
+    m.convertTo(m, CV_8U);
+    imshow(m, "m");
+    /* */
+
+    Voronoi voronoi;
+    voronoi.compute(data, data);
+
+    auto groups = voronoi.clear_groups();
+    return colorize_funct(input, data, groups);
+}
+
+AbstractSIFTVoronizer::AbstractSIFTVoronizer(size_t keypoint_size_treshold)
 {
     this->keypoint_size_treshold = keypoint_size_treshold;
+}
+
+
+SIFTVoronizerCircles::SIFTVoronizerCircles(size_t keypoint_size_treshold, int radius, int thickness, float radius_multiplier)
+: AbstractSIFTVoronizer(keypoint_size_treshold)
+{
+    
     this->radius = radius;
     this->thickness = thickness;
     this->radius_multiplier = radius_multiplier;
 }
 
 
-std::unique_ptr<SIFTVoronizer> SIFTVoronizer::create(const std::string& args)
+std::unique_ptr<SIFTVoronizerCircles> SIFTVoronizerCircles::create(const std::string& args)
 {
     auto vec = parse_args(args);
 
@@ -199,20 +302,13 @@ std::unique_ptr<SIFTVoronizer> SIFTVoronizer::create(const std::string& args)
     if (vec.size() >= 5)
         return nullptr;
     
-    return make_unique<SIFTVoronizer>(keypoint_size_treshold, radius, thickness, radius_multiplier);
+    return make_unique<SIFTVoronizerCircles>(keypoint_size_treshold, radius, thickness, radius_multiplier);
 }
 
-cv::Mat SIFTVoronizer::run(cv::Mat& input)
+
+cv::Mat SIFTVoronizerCircles::drawGenerators(std::vector<cv::KeyPoint> keypoints, cv::Size image_size)
 {
-    auto detector = cv::SIFT::create(0, 3, 0.03, 10, 1.6);
-    std::vector<cv::KeyPoint> keypoints;
-    detector->detect(input, keypoints);
-
-    keypoints.erase(std::remove_if(keypoints.begin(), keypoints.end(),
-        [&](cv::KeyPoint x){return x.size < keypoint_size_treshold;}),
-    keypoints.end());
-
-    cv::Mat data = cv::Mat::zeros(input.size(), CV_16S);
+    cv::Mat data = cv::Mat::zeros(image_size, CV_16S);
     int16_t n = 1;
     if (radius < 0)
         for (auto& k : keypoints)
@@ -220,10 +316,37 @@ cv::Mat SIFTVoronizer::run(cv::Mat& input)
     else
         for (auto& k : keypoints)
             cv::circle(data, k.pt, radius, n++, thickness);
+    return data;
+}
 
-    Voronoi voronoi;
-    voronoi.compute(data, data);
+SIFTVoronizerLines::SIFTVoronizerLines(
+    size_t keypoint_size_treshold,
+    size_t random_iter)
+    : AbstractSIFTVoronizer(keypoint_size_treshold)
+{
+    this->n_iter = random_iter;
+}
 
-    auto groups = voronoi.clear_groups();
-    return colorize_funct(input, data, groups);
+std::unique_ptr<SIFTVoronizerLines> SIFTVoronizerLines::create(const std::string& args)
+{
+    auto vec = parse_args(args);
+
+    size_t keypoint_size_treshold = default_keypoint_size_treshold;
+    size_t random_iter = default_n_iter; 
+
+    if (vec.size() >= 1 && vec[0].size() != 0 && !tryParse<size_t>(vec[0], keypoint_size_treshold))
+        return nullptr;
+    if (vec.size() >= 2 && vec[1].size() != 0 && !tryParse<size_t>(vec[1], random_iter))
+        return nullptr;
+    
+    return make_unique<SIFTVoronizerLines>(keypoint_size_treshold, random_iter);
+}
+
+cv::Mat SIFTVoronizerLines::drawGenerators(std::vector<cv::KeyPoint> keypoints, cv::Size image_size)
+{
+    std::vector<cv::Point2f> pts;
+    pts.reserve(keypoints.size());
+    for (auto& x : keypoints)
+        pts.push_back(move(x.pt));
+    return linesFromClosestPointsRandom(pts, image_size, n_iter);   
 }

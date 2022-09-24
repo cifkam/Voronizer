@@ -17,15 +17,15 @@ typename std::enable_if<std::is_unsigned<bool>::value, bool>::type tryParse(cons
     return true;
 }
 
-void str_lower(string& data)
+void strLower(string& data)
 {
     transform(data.begin(), data.end(), data.begin(),
         [](unsigned char c){ return tolower(c); });
 }
 
-bool str_to_colormap(string name, cv::ColormapTypes& output)
+bool strToColormap(string name, cv::ColormapTypes& output)
 {
-    str_lower(name);
+    strLower(name);
     map<string,cv::ColormapTypes> m =
     {
         {"autumn",cv::COLORMAP_AUTUMN},
@@ -75,7 +75,7 @@ void waitKey()
 
 
 
-cv::ColormapTypes string_to_colormap(string name);
+
 void imshow(const cv::Mat& image, const string& winname, bool wait_key)
 {
     cv::namedWindow(winname, cv::WINDOW_AUTOSIZE);
@@ -89,7 +89,7 @@ void imshow(const cv::Mat& image, const string& winname, bool wait_key)
 }
 
 
-void random_LUT(const cv::Mat& src, cv::Mat& dst)
+void randomLUT(const cv::Mat& src, cv::Mat& dst)
 {
     auto lut = cv::Mat(256, 1, CV_8U);
     for (int i = 0; i < 256; ++i)
@@ -106,7 +106,7 @@ void smoothEdges(cv::InputArray src, cv::OutputArray dst, int ksize, int iter)
     cv::pyrDown(dst,dst);
 }
 
-cv::Mat colorize_by_cmap(const cv::Mat& input, cv::ColormapTypes map, bool copy, bool apply_random_LUT)
+cv::Mat colorizeByCmap(const cv::Mat& input, cv::ColormapTypes map, bool copy, bool apply_random_LUT)
 {
     cv::Mat data;
     if (copy) 
@@ -120,12 +120,12 @@ cv::Mat colorize_by_cmap(const cv::Mat& input, cv::ColormapTypes map, bool copy,
 
     data.convertTo(data, CV_8U);
     if (apply_random_LUT)
-        random_LUT(data, data);
+        randomLUT(data, data);
     cv::applyColorMap(data, data, map);
     return data;
 }
 
-cv::Mat colorize_by_template(const cv::Mat& color_template, const Groups& voronoi_groups)
+cv::Mat colorizeByTemplate(const cv::Mat& color_template, const Groups& voronoi_groups)
 {
     cv::Mat data = cv::Mat::zeros(color_template.size(), CV_8UC3);
     
@@ -153,7 +153,7 @@ cv::Mat colorize_by_template(const cv::Mat& color_template, const Groups& vorono
 }
 
 
-void kmeans_color(cv::Mat ocv, cv::Mat& output, int K)
+void kmeansColor(cv::Mat ocv, cv::Mat& output, int K)
 {
     // convert to float & reshape to a [3 x W*H] Mat 
     //  (so every pixel is on a row of it's own)
@@ -180,5 +180,45 @@ void kmeans_color(cv::Mat ocv, cv::Mat& output, int K)
     // back to 2d, and uchar:
     output = data.reshape(3, ocv.rows);
     output.convertTo(output, CV_8U);
+}
+
+cv::Mat linesFromClosestPointsRandom(std::vector<cv::Point2f>& pts, cv::Size image_size, size_t iter, size_t pts_left_out)
+{
+    //TODO: generate samples WITHOUT REPLACEMENT
+    if (pts.size()%2 != pts_left_out%2 && pts_left_out < 2)
+        ++pts_left_out;
+
+    random_device rd; // obtain a random number from hardware
+    mt19937 gen(rd()); // seed the generator
+    auto rng = std::default_random_engine { rd() };
+    shuffle(pts.begin(), pts.end(), rng);
+
+    int16_t n = 1;
+    cv::Mat data = cv::Mat::zeros(image_size, CV_16S);
+    while (pts.size() > pts_left_out)
+    {
+        uniform_int_distribution<> distr(0, pts.size()-2); // define the range
+
+        cv::Point2f* a = &pts[pts.size()-1];
+        cv::Point2f* b = nullptr;
+        size_t b_index = -1;
+        float dist = numeric_limits<float>::infinity();
+        
+        for (int i = 0; i < iter; ++i)
+        { 
+            int j = distr(gen);
+            float d = cv::norm(*a-pts[j]);
+            if (d < dist)
+            {
+                dist = d;
+                b_index = j;
+                b = &pts[j];
+            }
+        }
+        cv::line(data, *a, *b, n++, 2);
+        std::swap(pts[b_index], pts[pts.size()-2]);
+        pts.resize(pts.size()-2);
+    }
+    return data;
 }
 
