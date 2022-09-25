@@ -80,7 +80,7 @@ bool run(const string& img_path, const string& mode, const string& options, bool
 int main( int argc, char** argv)
 {
     args = argparse::ArgumentParser("Voronoizer", "1.0");
-    args.add_argument("-i", "--img")
+    args.add_argument("image")
         .help("path to image to voronize")
         .required();
 
@@ -196,7 +196,7 @@ int main( int argc, char** argv)
     cv::ColormapTypes cmap_type;
     bool random = args.get<bool>("-r");
     uint smooth = args.get<uint>("-s");
-    string img_path = args.get("-i");
+    string img_path = args.get("image");
     string options = args.get("-o");
     string output_file = args.get("-f");
 

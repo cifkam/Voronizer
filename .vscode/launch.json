@@ -13,12 +13,12 @@
             "program": "${workspaceFolder}/Voronizer",
             "preLaunchTask": "${defaultBuildTask}",
             "args": [
-                "-i", "img/lena.jpg",
                 //"-m", "sift-lines", "-o", ",200", //keypoint treshold, radius[-1 to fill or >=0], thickness, radius_multiplier
-                "-m", "kmeans-lines", //"-o", ",3,", //řž median_pre, n_colors, cluster_size_treshold
+                "-m", "kmeans-lines", "-o", ",,,50", //median_pre, n_colors, cluster_size_treshold
                 //"-c", "twilight",
                 "-s", "3",
                 //"-f", "output.png"
+                "img/lena.jpg",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

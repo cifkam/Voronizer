@@ -32,7 +32,7 @@ void AbstractVoronizer::set_colormap(cv::ColormapTypes cmap_type, bool random)
 vector<string> AbstractVoronizer::parse_args(const std::string& args)
 {
     vector<string> vec;
-        if (args.size() == 0)
+    if (args.size() == 0)
         return vec;
 
     int i = 0;
@@ -160,6 +160,7 @@ std::unique_ptr<KMeansVoronizerLines> KMeansVoronizerLines::create(const std::st
     size_t median_pre = default_median_pre;
     size_t n_colors = default_n_colors;
     size_t cluster_size_treshold = default_cluster_size_treshold;
+    size_t n_iter = default_n_iter;
     
     if (vec.size() >= 1 && vec[0].size() != 0 && !tryParse<size_t>(vec[0], median_pre))
         return nullptr;
@@ -167,10 +168,12 @@ std::unique_ptr<KMeansVoronizerLines> KMeansVoronizerLines::create(const std::st
         return nullptr;
     if (vec.size() >= 3 && vec[2].size() != 0 && !tryParse<size_t>(vec[2], cluster_size_treshold))
         return nullptr;
-    if (vec.size() >= 4)
+    if (vec.size() >= 4 && vec[3].size() != 0 && !tryParse<size_t>(vec[3], n_iter))
+        return nullptr;
+    if (vec.size() >= 5)
         return nullptr;
     
-    return make_unique<KMeansVoronizerLines>(median_pre, n_colors, cluster_size_treshold);
+    return make_unique<KMeansVoronizerLines>(median_pre, n_colors, cluster_size_treshold, n_iter);
 
 }
 
@@ -188,6 +191,15 @@ cv::Mat AbstractKMeansVoronizer::run(cv::Mat& input)
     groups.erase(0);
     
     cv::Mat im = drawGenerators(groups, input.size());
+
+    /*  Show generators /
+    cv::Mat m(im);
+    for (int r = 0; r < m.rows; ++r)
+        for (int c = 0; c < m.cols; ++c)
+            m.at<int16_t>(r,c) %= 256;
+    m.convertTo(m, CV_8U);
+    imshow(m, "m");
+     /* */
 
     Voronoi voronoi;
     voronoi.compute(im, im);
@@ -248,10 +260,10 @@ cv::Mat AbstractSIFTVoronizer::run(cv::Mat& input)
         [&](cv::KeyPoint x){return x.size < keypoint_size_treshold;}),
     keypoints.end());
 
-    cv::Mat data = drawGenerators(keypoints, input.size());
+    cv::Mat im = drawGenerators(keypoints, input.size());
 
     /*  Show generators /
-    cv::Mat m(data);
+    cv::Mat m(im);
     for (int r = 0; r < m.rows; ++r)
         for (int c = 0; c < m.cols; ++c)
             m.at<int16_t>(r,c) %= 256;
@@ -260,10 +272,10 @@ cv::Mat AbstractSIFTVoronizer::run(cv::Mat& input)
      /* */
 
     Voronoi voronoi;
-    voronoi.compute(data, data);
+    voronoi.compute(im, im);
 
     auto groups = voronoi.clear_groups();
-    return colorize_funct(input, data, groups);
+    return colorize_funct(input, im, groups);
 }
 
 AbstractSIFTVoronizer::AbstractSIFTVoronizer(size_t keypoint_size_treshold)
