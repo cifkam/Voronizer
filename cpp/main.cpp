@@ -84,8 +84,13 @@ int main( int argc, char** argv)
         .help("path to image to voronize")
         .required();
 
+    args.add_argument("-o", "--options")
+        .help("Comma separated list of mode-specific positional options - see --mode for more information."
+        "\n\t\tSupports truncated list as well as using default value by omitting the value"
+        "\n\t\t(e.g. \"-o ,,,0.5\" will result in setting the third option to 0.5, all other options will keep their default values).")        
+        .default_value<string>("");
+
     vector<string> modes = {"sobel", "kmeans-circles", "kmeans-lines", "sift-circles", "sift-lines"};
-    //.append(",=").append(to_string())
     stringstream ss;
     ss <<
         "voronizer mode: " << to_string(modes) << "\n"
@@ -152,10 +157,7 @@ int main( int argc, char** argv)
         "\t\t";
     args.add_argument("-m", "--mode")
         .help(ss.str())
-
-            
-        .default_value<string>("sobel")
-        .required();
+        .default_value<string>("sobel");
 
     args.add_argument("-c", "--colormap")
         .help("OpenCV colormap name to use instead of original image as template: {autumn, bone, jet, winter, rainbow, ocean, summer, spring, cool, hsv, pink, hot, parula, magma, inferno, plasma, viridis, cividis, twilight, twilight_shifted, turbo}")
@@ -173,14 +175,8 @@ int main( int argc, char** argv)
     args.add_argument("-s", "--smooth")
         .help("Strength of edges smoothing")
         .default_value<uint>(3)
-        .required()
         .scan<'u', uint>();
 
-    args.add_argument("-o", "--options")
-        .help("Comma separated list of mode-specific positional options."
-        "\n\t\tSupports truncated list as well as using default value by omitting the value"
-        "\n\t\t(e.g. \"-o ,,0.5\" will result in setting the third option to 0.5, all other options will keep their default values.)")        
-        .default_value<string>("");
 
     try
     {
