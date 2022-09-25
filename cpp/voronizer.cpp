@@ -234,7 +234,7 @@ cv::Mat KMeansVoronizerLines::drawGenerators(const Groups& groups, cv::Size imag
         points.push_back(cv::Point2f(row,col));
     }
 
-    return linesFromClosestPointsRandom(points, image_size, n_iter); //TODO: add n_iter
+    return linesFromClosestPointsRandom(points, image_size, n_iter);
 }
 
 /* --- sift --- */
@@ -250,14 +250,14 @@ cv::Mat AbstractSIFTVoronizer::run(cv::Mat& input)
 
     cv::Mat data = drawGenerators(keypoints, input.size());
 
-    /* */ // TOTO: Show generators 
+    /*  Show generators /
     cv::Mat m(data);
     for (int r = 0; r < m.rows; ++r)
         for (int c = 0; c < m.cols; ++c)
             m.at<int16_t>(r,c) %= 256;
     m.convertTo(m, CV_8U);
     imshow(m, "m");
-    /* */
+     /* */
 
     Voronoi voronoi;
     voronoi.compute(data, data);

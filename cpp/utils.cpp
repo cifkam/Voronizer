@@ -184,14 +184,12 @@ void kmeansColor(cv::Mat ocv, cv::Mat& output, int K)
 
 cv::Mat linesFromClosestPointsRandom(std::vector<cv::Point2f>& pts, cv::Size image_size, size_t iter, size_t pts_left_out)
 {
-    //TODO: generate samples WITHOUT REPLACEMENT
     if (pts.size()%2 != pts_left_out%2 && pts_left_out < 2)
         ++pts_left_out;
 
-    random_device rd; // obtain a random number from hardware
+    random_device rd;  // obtain a random number from hardware
     mt19937 gen(rd()); // seed the generator
     auto rng = std::default_random_engine { rd() };
-    shuffle(pts.begin(), pts.end(), rng);
 
     int16_t n = 1;
     cv::Mat data = cv::Mat::zeros(image_size, CV_16S);
@@ -199,20 +197,21 @@ cv::Mat linesFromClosestPointsRandom(std::vector<cv::Point2f>& pts, cv::Size ima
     {
         uniform_int_distribution<> distr(0, pts.size()-2); // define the range
 
+        shuffle(pts.begin(), pts.end(), rng);
         cv::Point2f* a = &pts[pts.size()-1];
         cv::Point2f* b = nullptr;
         size_t b_index = -1;
         float dist = numeric_limits<float>::infinity();
-        
-        for (int i = 0; i < iter; ++i)
+
+        size_t N = min(iter, pts.size()-1);
+        for (int i = 0; i < N; ++i)
         { 
-            int j = distr(gen);
-            float d = cv::norm(*a-pts[j]);
+            float d = cv::norm(*a-pts[i]);
             if (d < dist)
             {
                 dist = d;
-                b_index = j;
-                b = &pts[j];
+                b_index = i;
+                b = &pts[i];
             }
         }
         cv::line(data, *a, *b, n++, 2);
