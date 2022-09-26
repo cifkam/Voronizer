@@ -110,7 +110,7 @@ size_t Growing::compute_inner(cv::Mat& data, bool clear_groups)
             processed.push_back(cell);
         }
 
-        if (neighborhood == Neighborhood::swap)
+        if (neighborhood == Neighborhood::alternating)
             bool_4_8 = !bool_4_8;
         
         opened = move(new_cells);

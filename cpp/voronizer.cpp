@@ -192,14 +192,13 @@ cv::Mat AbstractKMeansVoronizer::run(cv::Mat& input)
     
     cv::Mat im = drawGenerators(groups, input.size());
 
-    /*  Show generators /
-    cv::Mat m(im);
+    //Show generators
+    /* cv::Mat m(im);
     for (int r = 0; r < m.rows; ++r)
         for (int c = 0; c < m.cols; ++c)
             m.at<int16_t>(r,c) %= 256;
     m.convertTo(m, CV_8U);
-    imshow(m, "m");
-     /* */
+    imshow(m, "m"); */
 
     Voronoi voronoi;
     voronoi.compute(im, im);
@@ -262,14 +261,13 @@ cv::Mat AbstractSIFTVoronizer::run(cv::Mat& input)
 
     cv::Mat im = drawGenerators(keypoints, input.size());
 
-    /*  Show generators /
-    cv::Mat m(im);
+    //Show generators
+    /* cv::Mat m(im);
     for (int r = 0; r < m.rows; ++r)
         for (int c = 0; c < m.cols; ++c)
             m.at<int16_t>(r,c) %= 256;
     m.convertTo(m, CV_8U);
-    imshow(m, "m");
-     /* */
+    imshow(m, "m"); */
 
     Voronoi voronoi;
     voronoi.compute(im, im);

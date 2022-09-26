@@ -70,7 +70,6 @@ void Separator::post_funct(std::vector<Cell*>& processed, cv::Mat& output)
     {
         for (auto cell : processed)
             add_to_group(cell, n);
-        n++;
     }
     //TODO: grow neighbor regions to fill rejected areas OR just apply median filter that is big enough and then replace the values 
 }
@@ -120,15 +119,18 @@ size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_
                 State::unseen : State::closed);
         }
 
-    n = 1;
+    this->n = 1;
     size_t steps = 0;
     while (true)
     {
         size_t s = Growing::compute_inner(data, false);
+        ++n;
         steps += s;
         if (s == 0)
             break;
     }
+
+
 
     this->input_data = nullptr;
     output_data = move(data);

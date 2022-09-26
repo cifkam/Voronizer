@@ -85,7 +85,7 @@ int main( int argc, char** argv)
         .required();
 
     args.add_argument("-o", "--options")
-        .help("Comma separated list of mode-specific positional options - see --mode for more information."
+        .help("Comma separated list of mode-specific positional options - see --mode option description for more information."
         "\n\t\tSupports truncated list as well as using default value by omitting the value"
         "\n\t\t(e.g. \"-o ,,,0.5\" will result in setting the third option to 0.5, all other options will keep their default values).")        
         .default_value<string>("");
@@ -106,7 +106,7 @@ int main( int argc, char** argv)
         "\t\t      2. find edges by Sobel detetor\n"
         "\t\t      3. apply edge tresholding with treshold value EDGE_TRESHOLD [0-255]\n"
         "\t\t      4. apply median filter of size MEDIAN_POST\n"
-        "\t\t      5. remove any regions with less than CLUSTER_SIZE_TRESHOLD pixels´.\n"
+        "\t\t      5. remove any regions with less than CLUSTER_SIZE_TRESHOLD pixels.\n"
         "\n"
         "\t\t   kmeans-circles:  options ["
                 <<  "MEDIAN_PRE=" << to_string(KMeansVoronizerCircles::default_median_pre)
@@ -129,8 +129,8 @@ int main( int argc, char** argv)
                 << ",RANDOM_ITER=" << to_string(KMeansVoronizerLines::default_n_iter)
                 << "]\n"
         "\t\t      Generators created by KMeans color clustering - generators are lines where endpoints are centers of  mass of regions found by KMeans:\n"
-        "\t\t      1. - 4. same as \"kmeans-circles\"\n"
-        "\t\t      5. use centers of mass of the regions as endpoints of line segment generators\n"
+        "\t\t      1. - 3. same as \"kmeans-circles\"\n"
+        "\t\t      4. use centers of mass of the regions as endpoints of line segment generators\n"
         "\t\t          - for each point try RANDOM_ITER other (unused) points and select the closest one to create new line segment\n"
         "\n"
         "\t\t   sift-circles:  options ["
