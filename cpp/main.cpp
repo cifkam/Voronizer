@@ -85,21 +85,23 @@ int main( int argc, char** argv)
         .required();
 
     args.add_argument("-o", "--options")
-        .help("Comma separated list of mode-specific positional options - see --mode option description for more information."
-        "\n\t\tSupports truncated list as well as using default value by omitting the value"
-        "\n\t\t(e.g. \"-o ,,,0.5\" will result in setting the third option to 0.5, all other options will keep their default values).")        
+        .help("Comma separated list of mode-specific positional options\n"
+        "\t\t(see --mode option description for more information).\n"
+        "\t\tSupports truncated list as well as using default value by omitting the value\n"
+        "\t\t(e.g. \"-o ,,,0.5\" will result in setting the third option to 0.5,\n"
+        "\t\tall other options will keep their default values).")        
         .default_value<string>("");
 
     vector<string> modes = {"sobel", "kmeans-circles", "kmeans-lines", "sift-circles", "sift-lines"};
     stringstream ss;
-    ss <<
+    ss << std::fixed << std::setprecision(2) << 
         "voronizer mode: " << to_string(modes) << "\n"
         "\n"
         "\t\t   sobel:  options ["
-                <<  "MEDIAN_PRE=" << to_string(SobelVoronizer::default_median_pre)
-                << ",EDGE_TRESHOLD=" << to_string(SobelVoronizer::default_edge_treshold)
-                << ",MEDIAN_POST=" << to_string(SobelVoronizer::default_median_post)
-                << ",CLUSTER_SIZE_TRESHOLD=" << to_string(SobelVoronizer::default_cluster_size_treshold)
+                <<  "MEDIAN_PRE=" << SobelVoronizer::default_median_pre
+                << ",EDGE_TRESHOLD=" << SobelVoronizer::default_edge_treshold
+                << ",MEDIAN_POST=" << SobelVoronizer::default_median_post
+                << ",CLUSTER_SIZE_TRESHOLD=" << SobelVoronizer::default_cluster_size_treshold
                 << "]\n"      
         "\t\t      Generators created with Sobel edge detector:\n"
         "\t\t      1. preprocess image by median filter of size MEDIAN_PRE\n"
@@ -109,58 +111,69 @@ int main( int argc, char** argv)
         "\t\t      5. remove any regions with less than CLUSTER_SIZE_TRESHOLD pixels.\n"
         "\n"
         "\t\t   kmeans-circles:  options ["
-                <<  "MEDIAN_PRE=" << to_string(KMeansVoronizerCircles::default_median_pre)
-                << ",N_COLORS=" << to_string(KMeansVoronizerCircles::default_n_colors)
-                << ",CLUSTER_SIZE_TRESHOLD=" << to_string(KMeansVoronizerCircles::default_cluster_size_treshold)
-                << ",RADIUS=" << to_string(KMeansVoronizerCircles::default_radius)
-                << ",THICKNESS=" << to_string(KMeansVoronizerCircles::default_thickness)
+                <<  "MEDIAN_PRE=" << KMeansVoronizerCircles::default_median_pre
+                << ",N_COLORS=" << KMeansVoronizerCircles::default_n_colors
+                << ",CLUSTER_SIZE_TRESHOLD=" << KMeansVoronizerCircles::default_cluster_size_treshold
+                << ",RADIUS=" << KMeansVoronizerCircles::default_radius
+                << ",THICKNESS=" << KMeansVoronizerCircles::default_thickness
                 << "]\n"
-        "\t\t      Generators created by KMeans color clustering - generators are circles centered at centers of mass of regions found by KMeans:\n"
-        "\t\t      1. preprocess image by median filter of size MEDIAN_PRE\n"
-        "\t\t      2. quantize the image to N_COLORS by KMeans\n"
-        "\t\t      3. split the clusters into regions of spatially close pixels with the same color and remove any with less than CLUSTER_SIZE_TRESHOLD pixels\n"
-        "\t\t      4. use centers of mass of the regions as centers of generator circles with given RADIUS (0 for points instead of circles)\n"
-        "\t\t         and THICKNESS (-1 to fill the circles)\n"
+        "\t\t      Generators created by KMeans color clustering - generators are circles\n"
+        "\t\t      centered at centers of mass of regions found by KMeans:\n"            
+        "\t\t      1. preprocess image by median filter of size MEDIAN_PRE\n"            
+        "\t\t      2. quantize the image to N_COLORS by KMeans\n"                        
+        "\t\t      3. split the clusters into regions of spatially close pixels with the\n"
+        "\t\t         same color and remove any with less than CLUSTER_SIZE_TRESHOLD pixels\n"
+        "\t\t      4. use centers of mass of the regions as centers of generator circles\n"
+        "\t\t         with given RADIUS (0 for points instead of circles) and THICKNESS\n"
+        "\t\t         (-1 to fill the circles)\n"
         "\n"
         "\t\t   kmeans-lines:  options ["
-                <<  "MEDIAN_PRE=" << to_string(KMeansVoronizerLines::default_median_pre)
-                << ",N_COLORS=" << to_string(KMeansVoronizerLines::default_n_colors)
-                << ",CLUSTER_SIZE_TRESHOLD=" << to_string(KMeansVoronizerLines::default_cluster_size_treshold)
-                << ",RANDOM_ITER=" << to_string(KMeansVoronizerLines::default_n_iter)
+                <<  "MEDIAN_PRE=" << KMeansVoronizerLines::default_median_pre
+                << ",N_COLORS=" << KMeansVoronizerLines::default_n_colors
+                << ",CLUSTER_SIZE_TRESHOLD=" << KMeansVoronizerLines::default_cluster_size_treshold
+                << ",RANDOM_ITER=" << KMeansVoronizerLines::default_n_iter
                 << "]\n"
-        "\t\t      Generators created by KMeans color clustering - generators are lines where endpoints are centers of  mass of regions found by KMeans:\n"
+        "\t\t      Generators created by KMeans color clustering - generators are lines\n"
+        "\t\t      where endpoints are centers of  mass of regions found by KMeans:\n"
         "\t\t      1. - 3. same as \"kmeans-circles\"\n"
         "\t\t      4. use centers of mass of the regions as endpoints of line segment generators\n"
-        "\t\t          - for each point try RANDOM_ITER other (unused) points and select the closest one to create new line segment\n"
+        "\t\t         - for each point try RANDOM_ITER other (unused) points and select\n"
+        "\t\t         the closest one to create new line segment\n"
         "\n"
         "\t\t   sift-circles:  options ["
-                    <<  "KEYPOINT_SIZE_TRESHOLD=" << to_string(SIFTVoronizerCircles::default_keypoint_size_treshold)
-                    << ",RADIUS" << to_string(SIFTVoronizerCircles::default_radius)
-                    << ",THICKNESS" << to_string(SIFTVoronizerCircles::default_thickness)
-                    << ",RADIUS_MULTIPLIER" << to_string(SIFTVoronizerCircles::default_radius_multiplier)
+                    <<  "KEYPOINT_SIZE_TRESHOLD=" << SIFTVoronizerCircles::default_keypoint_size_treshold
+                    << ",RADIUS=" << SIFTVoronizerCircles::default_radius
+                    << ",THICKNESS=" << SIFTVoronizerCircles::default_thickness
+                    << ",RADIUS_MULTIPLIER=" << SIFTVoronizerCircles::default_radius_multiplier
                     << "]\n"
         "\t\t      Generators are points/circles created from SIFT keypoints:\n"
         "\t\t      1. Detect SIFT keypoints of the image\n"
         "\t\t      2. Filter out keypoints of size less than KEYPOINT_SIZE_TRESHOLD\n"
-        "\t\t      3. Create generator circles at selected keypoints with given RADIUS (0 for points instead of circles) and THICKNESS (-1 to fill the circles).\n"
-        "\t\t         You can also use RADIUS = -1 for radius given by size of SIFT keypoints, which can be adjusted by RADIUS_MULTIPLIER\n"
+        "\t\t      3. Create generator circles at selected keypoints with given RADIUS\n"
+        "\t\t         (0 for points instead of circles) and THICKNESS (-1 to fill the circles).\n"
+        "\t\t         You can also use RADIUS = -1 for radius given by size of SIFT keypoints,\n"
+        "\t\t         which can be adjusted by RADIUS_MULTIPLIER.\n"
         "\t\t         (RADIUS_MULTIPLIER is ignored in case of RADIUS >= 0)\n"
         "\n"
         "\t\t   sift-lines:  options ["
-                    <<  "KEYPOINT_SIZE_TRESHOLD=" << to_string(SIFTVoronizerLines::default_keypoint_size_treshold)
-                    << ",RANDOM_ITER" << to_string(SIFTVoronizerLines::default_n_iter)
+                    <<  "KEYPOINT_SIZE_TRESHOLD=" << SIFTVoronizerLines::default_keypoint_size_treshold
+                    << ",RANDOM_ITER=" << SIFTVoronizerLines::default_n_iter
                     << "]\n"
-        "\t\t      Generators created with SIFT keypoints - generators are lines where endpoints are SIFT keypoints:\n"
+        "\t\t      Generators created with SIFT keypoints - generators are lines where\n"
+        "\t\t      endpoints are SIFT keypoints:\n"
         "\t\t      1. - 2. same as \"sift-circles\"\n"
-        "\t\t      3. use selected SIFT keypoints as endpoints of line segment generators - for each point try RANDOM_ITER other (unused) points\n"
-        "\t\t         and select the closest one to create new line segment\n"
+        "\t\t      3. use selected SIFT keypoints as endpoints of line segment generators\n"
+        "\t\t         - for each point try RANDOM_ITER other (unused) points and select\n"
+        "\t\t         the closest one to create new line segment\n"
         "\t\t";
     args.add_argument("-m", "--mode")
         .help(ss.str())
         .default_value<string>("sobel");
 
     args.add_argument("-c", "--colormap")
-        .help("OpenCV colormap name to use instead of original image as color template: {autumn, bone, jet, winter, rainbow, ocean, summer, spring, cool, hsv, pink, hot, parula, magma, inferno, plasma, viridis, cividis, twilight, twilight_shifted, turbo}")
+        .help("OpenCV colormap name to use instead of original image as color template:\n"
+        "\t\t{autumn, bone, jet, winter, rainbow, ocean, summer, spring, cool, hsv, pink, hot,\n"
+        "\t\tparula, magma, inferno, plasma, viridis, cividis, twilight, twilight_shifted, turbo}")
         .default_value<string>("");
 
     args.add_argument("-f", "--file")
@@ -168,7 +181,8 @@ int main( int argc, char** argv)
         .default_value<string>("");
 
     args.add_argument("-r", "--random")
-        .help("Has effect only if using colormap: shuffle colors of areas randomly, otherwise color will depend on x and y coordinate of area")
+        .help("Has effect only if using colormap: shuffle colors of areas randomly,\n"
+        "\t\totherwise color will depend on x and y coordinate of area")
         .default_value(false)
         .implicit_value(true);
 
