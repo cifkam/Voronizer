@@ -118,7 +118,7 @@ int main( int argc, char** argv)
         "\t\t      Generators created by KMeans color clustering - generators are circles centered at centers of mass of regions found by KMeans:\n"
         "\t\t      1. preprocess image by median filter of size MEDIAN_PRE\n"
         "\t\t      2. quantize the image to N_COLORS by KMeans\n"
-        "\t\t      3. split the clusters into compact regions of pixels with the same color and remove any with less than CLUSTER_SIZE_TRESHOLD pixels\n"
+        "\t\t      3. split the clusters into regions of spatially close pixels with the same color and remove any with less than CLUSTER_SIZE_TRESHOLD pixels\n"
         "\t\t      4. use centers of mass of the regions as centers of generator circles with given RADIUS (0 for points instead of circles)\n"
         "\t\t         and THICKNESS (-1 to fill the circles)\n"
         "\n"
@@ -160,7 +160,7 @@ int main( int argc, char** argv)
         .default_value<string>("sobel");
 
     args.add_argument("-c", "--colormap")
-        .help("OpenCV colormap name to use instead of original image as template: {autumn, bone, jet, winter, rainbow, ocean, summer, spring, cool, hsv, pink, hot, parula, magma, inferno, plasma, viridis, cividis, twilight, twilight_shifted, turbo}")
+        .help("OpenCV colormap name to use instead of original image as color template: {autumn, bone, jet, winter, rainbow, ocean, summer, spring, cool, hsv, pink, hot, parula, magma, inferno, plasma, viridis, cividis, twilight, twilight_shifted, turbo}")
         .default_value<string>("");
 
     args.add_argument("-f", "--file")

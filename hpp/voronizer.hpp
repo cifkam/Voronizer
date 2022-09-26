@@ -75,7 +75,7 @@ protected:
 Voronizer class where generators are created by KMeans color clustering - generators are created from centers of mass of regions found by KMeans:
 1. preprocess image by median filter of size MEDIAN_PRE
 2. quantize the image to N_COLORS by KMeans
-3. split the clusters into compact regions of pixels with the same color and remove any with less than CLUSTER_SIZE_TRESHOLD pixels
+3. split the clusters into regions of spatially close pixels with the same color and remove any with less than CLUSTER_SIZE_TRESHOLD pixels
 (4. use centers of mass of the regions to create generators via abstract "drawGenerators" member function) 
 */
 class AbstractKMeansVoronizer : public AbstractVoronizer
@@ -106,7 +106,7 @@ protected:
 Voronizer class where generators are created by KMeans color clustering - generators are circles centered at centers of mass of regions found by KMeans:
 1. preprocess image by median filter of size MEDIAN_PRE
 2. quantize the image to N_COLORS by KMeans
-3. split the clusters into compact regions of pixels with the same color and remove any with less than CLUSTER_SIZE_TRESHOLD pixels
+3. split the clusters into regions of spatially close pixels with the same color and remove any with less than CLUSTER_SIZE_TRESHOLD pixels
 4. use centers of mass of the regions as centers of generator circles with given RADIUS (0 for points instead of circles) and THICKNESS (-1 to fill the circles)
 */
 class KMeansVoronizerCircles : public AbstractKMeansVoronizer
@@ -143,7 +143,7 @@ protected:
 Voronizer class where generators are created by KMeans color clustering - generators are lines where endpoints are centers of  mass of regions found by KMeans:
 1. preprocess image by median filter of size MEDIAN_PRE
 2. quantize the image to N_COLORS by KMeans
-3. split the clusters into compact regions of pixels with the same color and remove any with less than CLUSTER_SIZE_TRESHOLD pixels
+3. split the clusters into regions of spatially close pixels with the same color and remove any with less than CLUSTER_SIZE_TRESHOLD pixels
 4. use centers of mass of the regions as endpoints of line segment generators - for each point try RANDOM_ITER other (unused) points and select the closest one to create new line segment
 */
 class KMeansVoronizerLines : public AbstractKMeansVoronizer

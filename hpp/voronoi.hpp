@@ -5,6 +5,7 @@
 #include <opencv2/core.hpp>
 #include "growing.hpp"
 
+// Growing class that creates Voronoi cells from raster generators - starts from specified generators and grows while alternating 4- and 8-neighborhood
 class Voronoi : public Growing
 {
 public:

@@ -33,7 +33,7 @@ Optional arguments:
                       Generators created by KMeans color clustering - generators are circles centered at centers of mass of regions found by KMeans:
                       1. preprocess image by median filter of size MEDIAN_PRE
                       2. quantize the image to N_COLORS by KMeans
-                      3. split the clusters into compact regions of pixels with the same color and remove any with less than CLUSTER_SIZE_TRESHOLD pixels
+                      3. split the clusters into regions of spatially close pixels with the same color and remove any with less than CLUSTER_SIZE_TRESHOLD pixels
                       4. use centers of mass of the regions as centers of generator circles with given RADIUS (0 for points instead of circles)
                          and THICKNESS (-1 to fill the circles)
 
@@ -57,7 +57,7 @@ Optional arguments:
                       3. use selected SIFT keypoints as endpoints of line segment generators - for each point try RANDOM_ITER other (unused) points
                          and select the closest one to create new line segment
                  [default: "sobel"]
--c --colormap   OpenCV colormap name to use instead of original image as template: {autumn, bone, jet, winter, rainbow, ocean, summer, spring, cool, hsv, pink, hot, parula, magma, inferno, plasma, viridis, cividis, twilight, twilight_shifted, turbo}
+-c --colormap   OpenCV colormap name to use instead of original image as color template: {autumn, bone, jet, winter, rainbow, ocean, summer, spring, cool, hsv, pink, hot, parula, magma, inferno, plasma, viridis, cividis, twilight, twilight_shifted, turbo}
 -f --file       Write output to file instead of displaying it in a window
 -r --random     Has effect only if using colormap: shuffle colors of areas randomly, otherwise color will depend on x and y coordinate of area
 -s --smooth     Strength of edges smoothing [default: 3]

@@ -89,6 +89,7 @@ void imshow(const cv::Mat& image, const string& winname, bool wait_key)
 }
 
 
+// Shuffle values of the CV_8U image 
 void randomLUT(const cv::Mat& src, cv::Mat& dst)
 {
     auto lut = cv::Mat(256, 1, CV_8U);
@@ -106,6 +107,7 @@ void smoothEdges(cv::InputArray src, cv::OutputArray dst, int ksize, int iter)
     cv::pyrDown(dst,dst);
 }
 
+// Convert the CV_16S image to CV_8U (% 256) and apply colormap to create CV_8UC3 image
 cv::Mat colorizeByCmap(const cv::Mat& input, cv::ColormapTypes map, bool copy, bool apply_random_LUT)
 {
     cv::Mat data;
@@ -125,12 +127,13 @@ cv::Mat colorizeByCmap(const cv::Mat& input, cv::ColormapTypes map, bool copy, b
     return data;
 }
 
-cv::Mat colorizeByTemplate(const cv::Mat& color_template, const Groups& voronoi_groups)
+// Create an image from groups by setting the color of pixels in each group to an average color of the color_template in the area given by the group
+cv::Mat colorizeByTemplate(const cv::Mat& color_template, const Groups& groups)
 {
     cv::Mat data = cv::Mat::zeros(color_template.size(), CV_8UC3);
     
 
-    for (auto&& cls : voronoi_groups)
+    for (auto&& cls : groups)
     {
         uint64_t r(0),g(0),b(0);
         for (auto&& pixel : cls.second)
@@ -152,14 +155,14 @@ cv::Mat colorizeByTemplate(const cv::Mat& color_template, const Groups& voronoi_
     return data;
 }
 
-
+// KMeans color clustering
 void kmeansColor(cv::Mat ocv, cv::Mat& output, int K)
 {
     // convert to float & reshape to a [3 x W*H] Mat 
     //  (so every pixel is on a row of it's own)
     cv::Mat data;
-    ocv.convertTo(data,CV_32F);
-    data = data.reshape(1,data.total());
+    ocv.convertTo(data, CV_32F);
+    data = data.reshape(1, data.total());
 
     // do kmeans
     cv::Mat labels, centers;
@@ -181,7 +184,10 @@ void kmeansColor(cv::Mat ocv, cv::Mat& output, int K)
     output = data.reshape(3, ocv.rows);
     output.convertTo(output, CV_8U);
 }
-
+/*
+For each point in "pts" (in random order), select "iter" random other (unused) points and draw a draw a line to the closest one.
+You may specify, how many last points to leave out (points that will not be paired - may be useful, as there will be less points in the final iterations)
+*/
 cv::Mat linesFromClosestPointsRandom(std::vector<cv::Point2f>& pts, cv::Size image_size, size_t iter, size_t pts_left_out)
 {
     if (pts.size()%2 != pts_left_out%2 && pts_left_out < 2)

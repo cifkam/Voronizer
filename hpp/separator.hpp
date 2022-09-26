@@ -5,6 +5,10 @@
 #include "growing.hpp"
 #include <opencv2/core.hpp>
 
+/*
+Separate image into regions of spatially closed pixels with the same color
+(i.e. pixels that have the same color but are not next to each other will be in different groups)
+*/
 class Separator : public Growing
 {
 public:
