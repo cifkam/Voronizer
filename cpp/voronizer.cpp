@@ -7,7 +7,7 @@
 #include "utils.hpp"
 #include "separator.hpp"
 #include "voronoi.hpp"
-#include <opencv4/opencv2/features2d.hpp>
+#include <opencv2/features2d.hpp>
 using namespace std;
 
 AbstractVoronizer::AbstractVoronizer()

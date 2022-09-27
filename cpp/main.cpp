@@ -8,9 +8,9 @@
 #include <sstream>
 #include <algorithm>
 
-#include <opencv4/opencv2/highgui.hpp>
-#include <opencv4/opencv2/imgproc.hpp>
-#include <opencv4/opencv2/features2d.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/features2d.hpp>
 #include <argparse/argparse.hpp>
 #include "separator.hpp"
 #include "voronoi.hpp"

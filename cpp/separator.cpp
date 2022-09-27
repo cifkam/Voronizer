@@ -1,5 +1,6 @@
 #include "separator.hpp"
 #include <iostream>
+#include <opencv2/imgproc.hpp>
 using namespace std;
 
 Separator::Separator(size_t treshold, int bg_value)
@@ -71,6 +72,7 @@ void Separator::post_funct(std::vector<Cell*>& processed, cv::Mat& output)
         for (auto cell : processed)
             add_to_group(cell, n);
     }
+    
     //TODO: grow neighbor regions to fill rejected areas OR just apply median filter that is big enough and then replace the values 
 }
 
