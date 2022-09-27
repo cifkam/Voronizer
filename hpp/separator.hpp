@@ -18,6 +18,18 @@ public:
     int bg_value;
 
 protected:
+    // Helper class to remove regions that were removed by Separator because of region size tresholding
+    class AfterTresholdGrowing : public Growing
+    {
+    public:
+        int rows;
+        int cols;
+        AfterTresholdGrowing(int rows, int cols, Groups&& groups, CellMat&& cell_mat);
+    private:
+        virtual void init_funct(std::set<Cell*>& opened, CellMat& cell_mat, cv::Mat& data) override;
+
+    };
+
     size_t n;
 
     int last_row;
@@ -31,5 +43,10 @@ protected:
     virtual bool grow_condition(const cv::Mat& data, const cv::Mat& output, Cell* cell, Cell* neighbor) override;
 
 };
+
+
+
+
+
 
 #endif /* CLUSTERING_HPP */

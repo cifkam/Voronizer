@@ -1,6 +1,10 @@
 #include "separator.hpp"
 #include <iostream>
 #include <opencv2/imgproc.hpp>
+#include <cmath>
+#include <algorithm>
+#include <unordered_set>
+#include "utils.hpp"
 using namespace std;
 
 Separator::Separator(size_t treshold, int bg_value)
@@ -72,8 +76,6 @@ void Separator::post_funct(std::vector<Cell*>& processed, cv::Mat& output)
         for (auto cell : processed)
             add_to_group(cell, n);
     }
-    
-    //TODO: grow neighbor regions to fill rejected areas OR just apply median filter that is big enough and then replace the values 
 }
 
 
@@ -132,9 +134,55 @@ size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_
             break;
     }
 
-
+    // Grow pixels after removing areas with #pixels < trehold
+    auto tg = AfterTresholdGrowing(input_data.rows, input_data.cols, move(groups), move(cell_mat));
+    tg.compute(data, data, false);
+    groups = tg.clear_groups();
+    cell_mat = tg.clear_cellmat();
+    
 
     this->input_data = nullptr;
     output_data = move(data);
     return steps;
+}
+
+
+
+Separator::AfterTresholdGrowing::AfterTresholdGrowing(int rows, int cols, Groups&& groups, CellMat&& cell_mat) : Growing(Neighborhood::n4)
+{
+    this->rows = rows;
+    this->cols = cols;
+    this->groups = groups;
+    this->cell_mat = cell_mat;
+}
+
+
+void Separator::AfterTresholdGrowing::init_funct(set<Cell*>& opened, CellMat& cell_mat, cv::Mat& output)
+{
+    bool bool_4_8 = (neighborhood == Neighborhood::n4);
+
+    // Find the border of "background" pixels
+    auto it = groups.find(0);
+    if (it != groups.end())
+    {
+        auto bg = unordered_set<Cell*>();
+        bg.reserve(it->second.size());
+        for (auto& x : it->second)
+            bg.insert(x);
+        
+        for (auto& cell : it->second)
+        {
+            for (auto& neighbor : get_neighbors(cell, cell_mat, bool_4_8, cols, rows))
+            {
+                auto c_it = bg.find(neighbor);
+                if (c_it != bg.end())
+                {
+                    (**c_it).state = State::opened;
+                    opened.insert(cell);
+                }
+
+            }
+        }
+    }
+    
 }

@@ -8,7 +8,6 @@
 #include <vector>
 #include <sstream>
 #include <string>
-
 #include <opencv2/imgproc.hpp>
 
 #include "growing.hpp"
@@ -18,8 +17,14 @@
 #include <chrono>
 #include <functional>
 template <typename units = std::chrono::milliseconds, typename clock = std::chrono::steady_clock>
-int64_t measureTime(std::function<void(void)> fun);
+int64_t measureTime(std::function<void(void)> fun)
+{
+    auto start_time = clock::now();
+    fun();
+    auto end_time = clock::now();
+    return std::chrono::duration_cast<units>(end_time - start_time).count();
 
+}
 
 
 void waitKey();
