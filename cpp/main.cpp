@@ -203,7 +203,7 @@ int main( int argc, char** argv)
 
     string mode = args.get("-m");
     bool cmap = (args.get("-c") != "");
-    cv::ColormapTypes cmap_type;
+    cv::ColormapTypes cmap_type = cv::ColormapTypes::COLORMAP_AUTUMN;
     bool random = args.get<bool>("-r");
     uint smooth = args.get<uint>("-s");
     string img_path = args.get("image");

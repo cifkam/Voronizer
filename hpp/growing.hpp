@@ -39,9 +39,9 @@ public:
     // Public wrapper function to run the growing. 
     virtual size_t compute(cv::Mat& input, cv::Mat& output, bool clear_groups = true);
     // Returns map of stored groups (assignment of values to individual pixels) and clears the variable.
-    Groups clear_groups();
+    void clear_groups();
     // Returns matrix stored in cell_mat and clears the variable.
-    CellMat clear_cellmat();
+    void clear_cellmat();
 
 protected:
     // Main function that runs the growing

@@ -50,18 +50,14 @@ void Growing::assign(cv::Mat& data, int value, Cell* to)
 }
 
 
-Groups Growing::clear_groups()
+void Growing::clear_groups()
 {
-    auto g = move(groups);
     groups = Groups();
-    return g;
 }
 
-CellMat Growing::clear_cellmat()
+void Growing::clear_cellmat()
 {
-    auto c = move(cell_mat);
     cell_mat = CellMat();
-    return c;
 }
 
 

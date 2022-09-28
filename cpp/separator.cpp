@@ -137,8 +137,10 @@ size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_
     // Grow pixels after removing areas with #pixels < trehold
     auto tg = AfterTresholdGrowing(input_data.rows, input_data.cols, move(groups), move(cell_mat));
     tg.compute(data, data, false);
-    groups = tg.clear_groups();
-    cell_mat = tg.clear_cellmat();
+    groups = move(tg.groups);
+    tg.clear_groups();
+    cell_mat = move(tg.cell_mat);
+    tg.clear_cellmat();
     
 
     this->input_data = nullptr;

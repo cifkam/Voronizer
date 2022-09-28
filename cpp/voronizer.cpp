@@ -99,10 +99,12 @@ cv::Mat SobelVoronizer::run(cv::Mat& input)
     separator.compute(data, data);
     
     Voronoi voronoi;
-    voronoi.groups = separator.clear_groups();
+    voronoi.groups = move(separator.groups);
+    separator.clear_groups();
     voronoi.compute(data, data, false);
 
-    auto groups = voronoi.clear_groups();
+    auto groups = move(voronoi.groups);
+    voronoi.clear_groups();
     return colorize_funct(input, data, groups);
 }
 
@@ -187,7 +189,8 @@ cv::Mat AbstractKMeansVoronizer::run(cv::Mat& input)
     Separator separator(cluster_size_treshold, -1);
     data.convertTo(data, CV_16S);
     separator.compute(data, data);
-    auto groups = separator.clear_groups();
+    auto groups = move(separator.groups);
+    separator.clear_groups();
     groups.erase(0);
     
     cv::Mat im = drawGenerators(groups, input.size());
@@ -203,7 +206,8 @@ cv::Mat AbstractKMeansVoronizer::run(cv::Mat& input)
     Voronoi voronoi;
     voronoi.compute(im, im);
 
-    groups = voronoi.clear_groups();
+    groups = move(voronoi.groups);
+    voronoi.clear_groups();
     return colorize_funct(input, im, groups);
 }
 
@@ -272,7 +276,8 @@ cv::Mat AbstractSIFTVoronizer::run(cv::Mat& input)
     Voronoi voronoi;
     voronoi.compute(im, im);
 
-    auto groups = voronoi.clear_groups();
+    auto groups = move(voronoi.groups);
+    voronoi.clear_groups();
     return colorize_funct(input, im, groups);
 }
 
