@@ -22,9 +22,8 @@ void Separator::add_to_group(Cell* cell, int cls)
         it->second.push_back(cell); //found
 }
 
-void Separator::init_funct(set<Cell*>& opened, CellMat& cell_mat, cv::Mat& output)
+void Separator::init_funct(set<Cell*>& opened, cv::Mat& output)
 {
-    cell_mat = this->cell_mat; // restore cell_mat from previous iteration
     Cell* cell = nullptr;
 
 
@@ -33,7 +32,7 @@ void Separator::init_funct(set<Cell*>& opened, CellMat& cell_mat, cv::Mat& outpu
     {
         if (output.at<int_t>(last_row,col) < 0)
         {
-            cell = &cell_mat[last_row][col];
+            cell = &(*cell_mat)[last_row][col];
             last_col = col;
             break;
         }
@@ -45,7 +44,7 @@ void Separator::init_funct(set<Cell*>& opened, CellMat& cell_mat, cv::Mat& outpu
             {
                 if (output.at<int_t>(row,col) < 0)
                 {
-                    cell = &cell_mat[row][col];
+                    cell = &(*cell_mat)[row][col];
                     last_row = row;
                     last_col = col;
                     break;
@@ -111,15 +110,15 @@ size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_
         data = -data;
 
     // First initialization of cell_mat
-    cell_mat = CellMat(
+    cell_mat = make_unique<CellMat>(
         data.rows, vector<Cell>(
         data.cols, Cell(0, 0, State::unseen)));
     for (size_t row = 0; row < data.rows; ++row)
         for (size_t col = 0; col < data.cols; ++col)
         {
-            cell_mat[row][col].row = row;
-            cell_mat[row][col].col = col;
-            cell_mat[row][col].state = (data.at<int_t>(row,col) < 0 ?
+            (*cell_mat)[row][col].row = row;
+            (*cell_mat)[row][col].col = col;
+            (*cell_mat)[row][col].state = (data.at<int_t>(row,col) < 0 ?
                 State::unseen : State::closed);
         }
 
@@ -150,16 +149,16 @@ size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_
 
 
 
-Separator::AfterTresholdGrowing::AfterTresholdGrowing(int rows, int cols, Groups&& groups, CellMat&& cell_mat) : Growing(Neighborhood::n4)
+Separator::AfterTresholdGrowing::AfterTresholdGrowing(int rows, int cols, Groups&& groups, unique_ptr<CellMat>&& cell_mat) : Growing(Neighborhood::n4)
 {
     this->rows = rows;
     this->cols = cols;
     this->groups = groups;
-    this->cell_mat = cell_mat;
+    this->cell_mat = move(cell_mat);
 }
 
 
-void Separator::AfterTresholdGrowing::init_funct(set<Cell*>& opened, CellMat& cell_mat, cv::Mat& output)
+void Separator::AfterTresholdGrowing::init_funct(set<Cell*>& opened, cv::Mat& output)
 {
     bool bool_4_8 = (neighborhood == Neighborhood::n4);
 
@@ -174,7 +173,7 @@ void Separator::AfterTresholdGrowing::init_funct(set<Cell*>& opened, CellMat& ce
         
         for (auto& cell : it->second)
         {
-            for (auto& neighbor : get_neighbors(cell, cell_mat, bool_4_8, cols, rows))
+            for (auto& neighbor : get_neighbors(cell, bool_4_8, cols, rows))
             {
                 auto c_it = bg.find(neighbor);
                 if (c_it != bg.end())

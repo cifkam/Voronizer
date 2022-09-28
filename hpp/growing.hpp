@@ -5,7 +5,7 @@
 #include <vector>
 #include <opencv2/core.hpp>
 #include <map>
-
+#include <memory>
 
 typedef int16_t int_t;
 enum Neighborhood {n4, n8, alternating};
@@ -31,7 +31,7 @@ class Growing
 {
 public:
     Groups groups;
-    CellMat cell_mat;
+    std::unique_ptr<CellMat> cell_mat;
     Neighborhood neighborhood;
     
     // Constructor that takes type of neighborhood (4/8-neighborhood or alternating)
@@ -47,7 +47,7 @@ protected:
     // Main function that runs the growing
     virtual size_t compute_inner(cv::Mat& input_output_data, bool clear_groups = true);
     // Initialization of cell_mat and opened cells
-    virtual void init_funct(std::set<Cell*>& opened, CellMat& cell_mat, cv::Mat& data) = 0;
+    virtual void init_funct(std::set<Cell*>& opened, cv::Mat& data) = 0;
     // Possible postprocessing of pixels that were assigned a new value during the call of compute_inner
     virtual void post_funct(std::vector<Cell*>& processed, cv::Mat& data);
     // Wrapper for assignment a new value to data
@@ -58,7 +58,7 @@ protected:
     virtual void add_to_group(Cell* cell, int cls);
     // Checks if the the value from cell should be assigned to its neighbor
     virtual bool grow_condition(const cv::Mat& data, const cv::Mat& output, Cell* cell, Cell* neighbor);
-    std::vector<Cell*> get_neighbors(const Cell* cell, CellMat& cell_mat, bool bool_4_8, std::size_t cols, std::size_t rows);
+    std::vector<Cell*> get_neighbors(const Cell* cell, bool bool_4_8, std::size_t cols, std::size_t rows);
 };
 
 

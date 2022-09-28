@@ -12,7 +12,7 @@ public:
     Voronoi();
 
 private:
-    virtual void init_funct(std::set<Cell*>& opened, CellMat& cell_mat, cv::Mat& data) override;
+    virtual void init_funct(std::set<Cell*>& opened, cv::Mat& data) override;
 
 };
 

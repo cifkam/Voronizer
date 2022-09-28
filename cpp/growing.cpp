@@ -57,7 +57,7 @@ void Growing::clear_groups()
 
 void Growing::clear_cellmat()
 {
-    cell_mat = CellMat();
+    cell_mat = make_unique<CellMat>();
 }
 
 
@@ -82,7 +82,7 @@ size_t Growing::compute_inner(cv::Mat& data, bool clear_groups)
 
     bool bool_4_8 = (neighborhood == Neighborhood::n4);
     set<Cell*> opened;
-    init_funct(opened, cell_mat, data);
+    init_funct(opened, data);
     
     size_t steps = 0;
 
@@ -94,7 +94,7 @@ size_t Growing::compute_inner(cv::Mat& data, bool clear_groups)
         set<Cell*> new_cells;
         for (auto cell : opened)
         {
-            for (auto&& neighbor : get_neighbors(cell, cell_mat, bool_4_8, data.cols, data.rows))
+            for (auto&& neighbor : get_neighbors(cell, bool_4_8, data.cols, data.rows))
                 if (grow_condition(data, data, cell, neighbor))
                 {
                     new_cells.insert(neighbor);
@@ -119,7 +119,6 @@ size_t Growing::compute_inner(cv::Mat& data, bool clear_groups)
 
 vector<Cell*> Growing::get_neighbors(
     const Cell* cell,
-    CellMat& cell_mat,
     bool bool_4_8,
     size_t cols,
     size_t rows
@@ -147,13 +146,13 @@ vector<Cell*> Growing::get_neighbors(
         for (auto r : row_delta)
         {
             if (r == 0) continue;
-            Cell* c = &cell_mat[cell->row+r][cell->col]; 
+            Cell* c = &(*cell_mat)[cell->row+r][cell->col]; 
             neighbors.push_back(c);
         }
         for (auto c : col_delta)
         {
             if (c == 0) continue;
-            neighbors.push_back(&cell_mat[cell->row][cell->col+c]);
+            neighbors.push_back(&(*cell_mat)[cell->row][cell->col+c]);
         }
     }
     else
@@ -162,7 +161,7 @@ vector<Cell*> Growing::get_neighbors(
             for (auto c : col_delta)
             {
                 if (r == 0 && c == 0) continue;
-                neighbors.push_back(&cell_mat[cell->row+r][cell->col+c]);
+                neighbors.push_back(&(*cell_mat)[cell->row+r][cell->col+c]);
             }
     }
 
