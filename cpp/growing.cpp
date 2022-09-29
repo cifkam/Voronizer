@@ -31,9 +31,9 @@ void Growing::post_funct(std::vector<Cell*>& processed, cv::Mat& data)
 
 void Growing::add_to_group(Cell* cell, int cls)
 {
-    auto it = groups.find(cls);
-    if (it == groups.end())
-        groups.emplace_hint(it, cls, std::vector<Cell*>(1, cell)); // not found
+    auto it = groups->find(cls);
+    if (it == groups->end())
+        groups->emplace_hint(it, cls, std::vector<Cell*>(1, cell)); // not found
     else
         it->second.push_back(cell); //found
 }
@@ -50,14 +50,18 @@ void Growing::assign(cv::Mat& data, int value, Cell* to)
 }
 
 
-void Growing::clear_groups()
+std::unique_ptr<Groups> Growing::clear_groups()
 {
-    groups = Groups();
+    auto g = move(groups);
+    groups = nullptr;
+    return g;
 }
 
-void Growing::clear_cellmat()
+std::unique_ptr<CellMat> Growing::clear_cellmat()
 {
-    cell_mat = make_unique<CellMat>();
+    auto c = move(cell_mat);
+    cell_mat = nullptr;
+    return c;
 }
 
 
@@ -66,28 +70,36 @@ bool Growing::grow_condition(const cv::Mat& input_data, const cv::Mat& data, Cel
     return neighbor->state == State::unseen;   
 }
 
-size_t Growing::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_groups)
+size_t Growing::compute(cv::Mat& input_data, cv::Mat& output_data, unique_ptr<Groups>&& groups_init, unique_ptr<CellMat>&& cellmat_init)
 {
     cv::Mat data = input_data.clone();
-    size_t steps = compute_inner(data, clear_groups);
+    if (groups_init == nullptr)
+        groups = make_unique<Groups>();
+    else
+        groups = move(groups_init);
+
+    bool create_new_cellmat = false;
+    if (cellmat_init == nullptr)
+        create_new_cellmat = true;
+    else
+        cell_mat = move(cellmat_init);
+
+    size_t steps = compute_inner(data, create_new_cellmat);
     output_data = move(data);
     return steps;
 }
 
-size_t Growing::compute_inner(cv::Mat& data, bool clear_groups)
+size_t Growing::compute_inner(cv::Mat& data, bool create_new_cellmat)
 {
     assert(data.depth() == CV_16S);
-    if (clear_groups)
-        this->clear_groups();
 
     bool bool_4_8 = (neighborhood == Neighborhood::n4);
     set<Cell*> opened;
-    init_funct(opened, data);
+    init_funct(opened, data, create_new_cellmat);
     
     size_t steps = 0;
 
     vector<Cell*> processed;
-    //processed.reserve(rows*cols);
 
     while (opened.size() > 0)
     {
@@ -127,19 +139,13 @@ vector<Cell*> Growing::get_neighbors(
     vector<int> col_delta;
     vector<Cell*> neighbors;
 
-    if (cell->row == 0)
-        row_delta = {0,1};
-    else if (cell->row == rows-1)
-        row_delta = {-1,0};
-    else
-        row_delta = {-1,0,1};
+    if (cell->row == 0)           row_delta = {0,1};
+    else if (cell->row == rows-1) row_delta = {-1,0};
+    else                          row_delta = {-1,0,1};
 
-    if (cell->col == 0)
-        col_delta = {0,1};
-    else if (cell->col == cols-1)
-        col_delta = {-1,0};
-    else
-        col_delta = {-1,0,1};
+    if (cell->col == 0)           col_delta = {0,1};
+    else if (cell->col == cols-1) col_delta = {-1,0};
+    else                          col_delta = {-1,0,1};
 
     if (bool_4_8)
     {

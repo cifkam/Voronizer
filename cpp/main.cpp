@@ -19,7 +19,7 @@
 
 using namespace std;
 namespace fs = std::filesystem;
-typedef function<cv::Mat(const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)> color_funct_t;
+typedef function<cv::Mat(const cv::Mat& input, const cv::Mat& voronoi_output, const Groups* voronoi_groups)> color_funct_t;
 
 argparse::ArgumentParser args;
 

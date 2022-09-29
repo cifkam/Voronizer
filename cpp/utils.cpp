@@ -1,12 +1,14 @@
 #include "utils.hpp"
+
 #include <map>
 #include <iostream>
+
 #include <opencv2/highgui.hpp>
 
 using namespace std;
 
 template <>
-typename std::enable_if<std::is_unsigned<bool>::value, bool>::type tryParse(const std::string& s, bool& output)
+typename std::enable_if<std::is_unsigned<bool>::value, bool>::type tryParse(const std::string& s, bool& output) noexcept
 {
     if (s == "true")
         output = true;
@@ -128,12 +130,11 @@ cv::Mat colorizeByCmap(const cv::Mat& input, cv::ColormapTypes map, bool copy, b
 }
 
 // Create an image from groups by setting the color of pixels in each group to an average color of the color_template in the area given by the group
-cv::Mat colorizeByTemplate(const cv::Mat& color_template, const Groups& groups)
+cv::Mat colorizeByTemplate(const cv::Mat& color_template, const Groups* groups)
 {
     cv::Mat data = cv::Mat::zeros(color_template.size(), CV_8UC3);
-    
 
-    for (auto&& cls : groups)
+    for (auto&& cls : *groups)
     {
         uint64_t r(0),g(0),b(0);
         for (auto&& pixel : cls.second)

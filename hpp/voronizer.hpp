@@ -9,7 +9,7 @@
 #include <opencv2/imgproc.hpp>
 #include "growing.hpp"
 
-typedef std::function<cv::Mat(const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)> color_funct_t;
+typedef std::function<cv::Mat(const cv::Mat& input, const cv::Mat& voronoi_output, const Groups* voronoi_groups)> color_funct_t;
 
 // Abstract class for Voronizing an image - provides an interface for running the Voronizer and setting colorization type
 class AbstractVoronizer
@@ -28,9 +28,9 @@ public:
 protected:
     AbstractVoronizer();
     // Colorization by OpenCV cmap
-    cv::Mat colorize_funct_cmap(const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups);
+    cv::Mat colorize_funct_cmap(const cv::Mat& input, const cv::Mat& voronoi_output, const Groups* voronoi_groups);
     // Colorization by average color of pixel in each group
-    static cv::Mat colorize_funct_template(const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups);
+    static cv::Mat colorize_funct_template(const cv::Mat& input, const cv::Mat& voronoi_output, const Groups* voronoi_groups);
     // Splits string args separated by comma into vector
     static std::vector<std::string> parse_args(const std::string& args);
 };
@@ -99,7 +99,7 @@ protected:
     size_t cluster_size_treshold;
 
     // Draw an image of generators (given the computed groups) 
-    virtual cv::Mat drawGenerators(const Groups& groups, cv::Size image_size) = 0;
+    virtual cv::Mat drawGenerators(const Groups* groups, cv::Size image_size) = 0;
 };
 
 /*
@@ -135,7 +135,7 @@ protected:
     int thickness;
 
     // Draw an image of generators (given the computed groups)
-    virtual cv::Mat drawGenerators(const Groups& groups, cv::Size image_size) override;
+    virtual cv::Mat drawGenerators(const Groups* groups, cv::Size image_size) override;
 
 };
 
@@ -165,7 +165,7 @@ protected:
     size_t n_iter;
 
     // Draw an image of generators (given the computed groups)
-    virtual cv::Mat drawGenerators(const Groups& groups, cv::Size image_size) override;
+    virtual cv::Mat drawGenerators(const Groups* groups, cv::Size image_size) override;
 
 };
 

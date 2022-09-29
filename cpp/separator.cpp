@@ -1,9 +1,13 @@
 #include "separator.hpp"
+
 #include <iostream>
-#include <opencv2/imgproc.hpp>
 #include <cmath>
 #include <algorithm>
 #include <unordered_set>
+#include <stdexcept>
+
+#include <opencv2/imgproc.hpp>
+
 #include "utils.hpp"
 using namespace std;
 
@@ -15,19 +19,19 @@ Separator::Separator(size_t treshold, int bg_value)
 
 void Separator::add_to_group(Cell* cell, int cls)
 {
-    auto it = groups.find(cls);
-    if (it == groups.end())
-        groups.emplace_hint(it, cls, std::vector<Cell*>(1, cell)); // not found
+    auto it = groups->find(cls);
+    if (it == groups->end())
+        groups->emplace_hint(it, cls, std::vector<Cell*>(1, cell)); // not found
     else
         it->second.push_back(cell); //found
 }
 
-void Separator::init_funct(set<Cell*>& opened, cv::Mat& output)
+void Separator::init_funct(set<Cell*>& opened, cv::Mat& output, bool init_cellmat)
 {
     Cell* cell = nullptr;
 
-
-    //restore searching from pixel used in previous iteration instead always starting from zero
+    // Find a pixel with negative value that we will start growing from
+    // (restore searching from pixel used in previous iteration instead always starting from zero)
     for (int col = last_col+1; col < output.cols; ++col)
     {
         if (output.at<int_t>(last_row,col) < 0)
@@ -55,6 +59,7 @@ void Separator::init_funct(set<Cell*>& opened, cv::Mat& output)
         }
     if (cell == nullptr) return;
 
+    // Open the found cell and assign it new area id
     cell->state = State::opened;
     assign(output, n, cell);
     opened.insert(cell);
@@ -85,16 +90,26 @@ bool Separator::grow_condition(const cv::Mat& input_data, const cv::Mat& data, C
 
 
 
-size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_groups)
+size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data,std::unique_ptr<Groups>&& groups_init, std::unique_ptr<CellMat>&& cellmat_init)
 {
-    if (clear_groups)
-        this->clear_groups();
+    if (groups == nullptr)
+        this->groups = make_unique<Groups>();
+    else
+        this->groups = move(groups_init);
+    
+    bool create_new_cellmat = false;
+    if (cellmat_init == nullptr)
+        create_new_cellmat = true;
+    else
+        cell_mat = move(cellmat_init);
 
     cv::Mat data = input_data.clone();
     this->input_data = &input_data;
     this->last_row = 0;
     this->last_col = 0;
 
+    // Transform the data in a way that the background value is zero and there are no pixels with 
+    // positive values (so we can assign them positive values in following iterations) 
     if (bg_value != 0)
         for (size_t row = 0; row < data.rows; ++row)
             for (size_t col = 0; col < data.cols; ++col)
@@ -107,21 +122,31 @@ size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_
                     data.at<int_t>(row,col) = value - bg_value;
             }
     else
-        data = -data;
+        data = -data; 
 
-    // First initialization of cell_mat
-    cell_mat = make_unique<CellMat>(
-        data.rows, vector<Cell>(
-        data.cols, Cell(0, 0, State::unseen)));
+
+    if (create_new_cellmat)
+    {
+        // First initialization of cell_mat
+        cell_mat = make_unique<CellMat>(
+            data.rows, vector<Cell>(
+            data.cols, Cell(0, 0, State::unseen))
+        );
+    }
     for (size_t row = 0; row < data.rows; ++row)
         for (size_t col = 0; col < data.cols; ++col)
         {
-            (*cell_mat)[row][col].row = row;
-            (*cell_mat)[row][col].col = col;
-            (*cell_mat)[row][col].state = (data.at<int_t>(row,col) < 0 ?
+            Cell& c = (*cell_mat)[row][col];
+            if (create_new_cellmat)
+            {
+                c.row = row;
+                c.col = col;
+            }
+
+            c.state = (data.at<int_t>(row,col) < 0 ?
                 State::unseen : State::closed);
         }
-
+    
     this->n = 1;
     size_t steps = 0;
     while (true)
@@ -134,12 +159,10 @@ size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_
     }
 
     // Grow pixels after removing areas with #pixels < trehold
-    auto tg = AfterTresholdGrowing(input_data.rows, input_data.cols, move(groups), move(cell_mat));
-    tg.compute(data, data, false);
-    groups = move(tg.groups);
-    tg.clear_groups();
-    cell_mat = move(tg.cell_mat);
-    tg.clear_cellmat();
+    auto tg = AfterTresholdGrowing(input_data.rows, input_data.cols);
+    tg.compute(data, data, move(groups), move(cell_mat));
+    groups = tg.clear_groups();
+    cell_mat = tg.clear_cellmat();
     
 
     this->input_data = nullptr;
@@ -149,22 +172,27 @@ size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data, bool clear_
 
 
 
-Separator::AfterTresholdGrowing::AfterTresholdGrowing(int rows, int cols, Groups&& groups, unique_ptr<CellMat>&& cell_mat) : Growing(Neighborhood::n4)
-{
-    this->rows = rows;
-    this->cols = cols;
-    this->groups = groups;
-    this->cell_mat = move(cell_mat);
-}
+Separator::AfterTresholdGrowing::AfterTresholdGrowing(int rows, int cols)
+: Growing(Neighborhood::n4), rows(rows), cols(cols)
+{}
 
-
-void Separator::AfterTresholdGrowing::init_funct(set<Cell*>& opened, cv::Mat& output)
+void Separator::AfterTresholdGrowing::init_funct(set<Cell*>& opened, cv::Mat& output, bool create_new_cellmat)
 {
+    if (create_new_cellmat == true)
+        throw logic_error(
+            string(nameof(AfterTresholdGrowing))
+            .append(" doesn't support call of ")
+            .append(nameof(init_funct))
+            .append(" with ")
+            .append(nameof(create_new_cellmat))
+            .append(" == True!")
+        );
+
     bool bool_4_8 = (neighborhood == Neighborhood::n4);
 
     // Find the border of "background" pixels
-    auto it = groups.find(0);
-    if (it != groups.end())
+    auto it = groups->find(0);
+    if (it != groups->end())
     {
         auto bg = unordered_set<Cell*>();
         bg.reserve(it->second.size());

@@ -17,14 +17,14 @@ AbstractVoronizer::AbstractVoronizer()
 
 void AbstractVoronizer::unset_colormap()
 {
-    colorize_funct = [&](const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)
+    colorize_funct = [&](const cv::Mat& input, const cv::Mat& voronoi_output, const Groups* voronoi_groups)
     { return colorizeByTemplate(input, voronoi_groups); };
 }
 
 
 void AbstractVoronizer::set_colormap(cv::ColormapTypes cmap_type, bool random)
 {
-    colorize_funct = [cmap_type,random](const cv::Mat& input, const cv::Mat& voronoi_output, const Groups& voronoi_groups)
+    colorize_funct = [cmap_type,random](const cv::Mat& input, const cv::Mat& voronoi_output, const Groups* voronoi_groups)
     { return colorizeByCmap(voronoi_output, cmap_type, true, random); };
 }
 
@@ -99,13 +99,9 @@ cv::Mat SobelVoronizer::run(cv::Mat& input)
     separator.compute(data, data);
     
     Voronoi voronoi;
-    voronoi.groups = move(separator.groups);
-    separator.clear_groups();
-    voronoi.compute(data, data, false);
+    voronoi.compute(data, data, separator.clear_groups(), separator.clear_cellmat());
 
-    auto groups = move(voronoi.groups);
-    voronoi.clear_groups();
-    return colorize_funct(input, data, groups);
+    return colorize_funct(input, data, &*voronoi.groups);
 }
 
 
@@ -189,11 +185,10 @@ cv::Mat AbstractKMeansVoronizer::run(cv::Mat& input)
     Separator separator(cluster_size_treshold, -1);
     data.convertTo(data, CV_16S);
     separator.compute(data, data);
-    auto groups = move(separator.groups);
-    separator.clear_groups();
-    groups.erase(0);
+    auto groups = separator.clear_groups();
+    groups->erase(0);
     
-    cv::Mat im = drawGenerators(groups, input.size());
+    cv::Mat im = drawGenerators(&*groups, input.size());
 
     //Show generators
     /* cv::Mat m(im);
@@ -204,17 +199,16 @@ cv::Mat AbstractKMeansVoronizer::run(cv::Mat& input)
     imshow(m, "m"); */
 
     Voronoi voronoi;
-    voronoi.compute(im, im);
+    voronoi.compute(im, im, nullptr, separator.clear_cellmat());
 
-    groups = move(voronoi.groups);
-    voronoi.clear_groups();
-    return colorize_funct(input, im, groups);
+    groups = voronoi.clear_groups();
+    return colorize_funct(input, im, &*groups);
 }
 
-cv::Mat KMeansVoronizerCircles::drawGenerators(const Groups& groups, cv::Size image_size)
+cv::Mat KMeansVoronizerCircles::drawGenerators(const Groups* groups, cv::Size image_size)
 {
     cv::Mat im = cv::Mat::zeros(image_size, CV_16S);
-    for (auto& group : groups)
+    for (auto& group : *groups)
     {
         size_t row = 0;
         size_t col = 0;
@@ -231,11 +225,11 @@ cv::Mat KMeansVoronizerCircles::drawGenerators(const Groups& groups, cv::Size im
 }
 
 
-cv::Mat KMeansVoronizerLines::drawGenerators(const Groups& groups, cv::Size image_size)
+cv::Mat KMeansVoronizerLines::drawGenerators(const Groups* groups, cv::Size image_size)
 {
     std::vector<cv::Point2f> points;
-    points.reserve(groups.size());
-    for (auto& group : groups)
+    points.reserve(groups->size());
+    for (auto& group : *groups)
     {
         size_t row = 0;
         size_t col = 0;
@@ -276,9 +270,8 @@ cv::Mat AbstractSIFTVoronizer::run(cv::Mat& input)
     Voronoi voronoi;
     voronoi.compute(im, im);
 
-    auto groups = move(voronoi.groups);
-    voronoi.clear_groups();
-    return colorize_funct(input, im, groups);
+    auto groups = voronoi.clear_groups();
+    return colorize_funct(input, im, &*groups);
 }
 
 AbstractSIFTVoronizer::AbstractSIFTVoronizer(size_t keypoint_size_treshold)

@@ -8,23 +8,34 @@ Voronoi::Voronoi() : Growing(Neighborhood::alternating)
 
 }
 
-void Voronoi::init_funct(set<Cell*>& opened, cv::Mat& output)
+void Voronoi::init_funct(set<Cell*>& opened, cv::Mat& output, bool create_new_cellmat)
 {
-    cell_mat = make_unique<CellMat>(
-        output.rows, vector<Cell>(
-        output.cols, Cell(0, 0, State::unseen)
-    ));
-    
+    if (create_new_cellmat)
+    {
+        cell_mat = make_unique<CellMat>(
+            output.rows, vector<Cell>(
+            output.cols, Cell(0, 0, State::unseen)
+        ));
+    }
+
     for (int row = 0; row < output.rows; ++row)
         for (int col = 0; col < output.cols; ++col)
         {
-            (*cell_mat)[row][col].row = row;
-            (*cell_mat)[row][col].col = col;
+            Cell* cell = &(*cell_mat)[row][col];
+            if (create_new_cellmat)
+            {
+                cell->row = row;
+                cell->col = col;
+            }
+
             if (output.at<int_t>(row,col) != 0)
             {
-                Cell* cell = &(*cell_mat)[row][col];
                 cell->state = State::opened;
                 opened.insert(cell);
+            }
+            else
+            {
+                cell->state = State::unseen;
             }
         }
 }
