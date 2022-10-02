@@ -13,11 +13,11 @@ enum State {unseen, opened, closed};
 
 struct Cell
 {
-    Cell(size_t row, size_t col, State state);
+    Cell(int row, int col, State state);
     friend bool operator<(const Cell& lhs, const Cell& rhs);
 
-    size_t row;
-    size_t col;
+    int row;
+    int col;
     State state;
 };
 

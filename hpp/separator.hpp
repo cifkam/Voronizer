@@ -38,7 +38,7 @@ protected:
 
     };
 
-    size_t n;
+    int n;
 
     int last_row;
     int last_col;

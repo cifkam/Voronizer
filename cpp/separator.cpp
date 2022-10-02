@@ -12,7 +12,7 @@
 using namespace std;
 
 Separator::Separator(size_t treshold, int bg_value)
-: Growing(Neighborhood::n4), treshold(treshold), bg_value(bg_value)
+: Growing(Neighborhood::n4), treshold(treshold), bg_value(bg_value), last_row(-1), last_col(-1), n(1), input_data(nullptr)
 {
 
 }
@@ -111,8 +111,8 @@ size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data,std::unique_
     // Transform the data in a way that the background value is zero and there are no pixels with 
     // positive values (so we can assign them positive values in following iterations) 
     if (bg_value != 0)
-        for (size_t row = 0; row < data.rows; ++row)
-            for (size_t col = 0; col < data.cols; ++col)
+        for (int row = 0; row < data.rows; ++row)
+            for (int col = 0; col < data.cols; ++col)
             {
                 int_t value = data.at<int_t>(row,col);
 
@@ -133,8 +133,8 @@ size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data,std::unique_
             data.cols, Cell(0, 0, State::unseen))
         );
     }
-    for (size_t row = 0; row < data.rows; ++row)
-        for (size_t col = 0; col < data.cols; ++col)
+    for (int row = 0; row < data.rows; ++row)
+        for (int col = 0; col < data.cols; ++col)
         {
             Cell& c = (*cell_mat)[row][col];
             if (create_new_cellmat)
@@ -224,26 +224,30 @@ void Separator::AfterTresholdGrowing::Remap(cv::Mat& data)
     /* */
     if (groups->size() == 0)
         return;
+
+    unique_ptr<Groups> g = make_unique<Groups>();
     auto it = groups->begin();
     
     if (it->first < 0)
         throw logic_error("Error: Found negative group id!");
     
     if (it->first == 0)
+    {
+        (*g)[it->first] = move(it->second);
         ++it;
+    }
 
     int n = 1;
     while (it != groups->end())
     {
         if (it->first != n)
         {
-            auto node = groups->extract(it);
-            node.key() = n;
-            groups->insert(std::move(node));
+            (*g)[n] = move(it->second);
             ++n;
         }
         ++it;
     }
+    swap(this->groups, g);
 
     for (auto& iter : *groups)
         if (iter.first != data.at<int16_t>(iter.second[0]->row, iter.second[0]->col))

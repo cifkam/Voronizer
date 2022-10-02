@@ -147,7 +147,7 @@ cv::Mat colorizeByTemplate(const cv::Mat& color_template, const Groups* groups)
         r /= cls.second.size();
         g /= cls.second.size();
         b /= cls.second.size();
-        cv::Vec3b color(r,g,b);
+        cv::Vec3b color((uchar)r,(uchar)g,(uchar)b);
 
         for (auto&& pixel : cls.second)
             data.at<cv::Vec3b>(pixel->row, pixel->col) = color;
@@ -163,7 +163,7 @@ void kmeansColor(cv::Mat ocv, cv::Mat& output, int K)
     //  (so every pixel is on a row of it's own)
     cv::Mat data;
     ocv.convertTo(data, CV_32F);
-    data = data.reshape(1, data.total());
+    data = data.reshape(1, (int)data.total());
 
     // do kmeans
     cv::Mat labels, centers;
@@ -176,7 +176,7 @@ void kmeansColor(cv::Mat ocv, cv::Mat& output, int K)
 
     // replace pixel values with their center value:
     cv::Vec3f *p = data.ptr<cv::Vec3f>();
-    for (size_t i=0; i<data.rows; i++) {
+    for (int i=0; i<data.rows; i++) {
         int center_id = labels.at<int>(i);
         p[i] = centers.at<cv::Vec3f>(center_id);
     }
@@ -202,24 +202,28 @@ cv::Mat linesFromClosestPointsRandom(std::vector<cv::Point2f>& pts, cv::Size ima
     cv::Mat data = cv::Mat::zeros(image_size, CV_16S);
     while (pts.size() > pts_left_out)
     {
-        uniform_int_distribution<> distr(0, pts.size()-2); // define the range
+        uniform_int_distribution<> distr(0, (int)(pts.size()-2)); // define the range
 
         shuffle(pts.begin(), pts.end(), rng);
         cv::Point2f* a = &pts[pts.size()-1];
         cv::Point2f* b = nullptr;
         size_t b_index = -1;
-        float dist = numeric_limits<float>::infinity();
+        double dist = numeric_limits<double>::infinity();
 
         size_t N = min(iter, pts.size()-1);
         for (int i = 0; i < N; ++i)
         { 
-            float d = cv::norm(*a-pts[i]);
+            double d = cv::norm(*a-pts[i]);
             if (d < dist)
             {
                 dist = d;
                 b_index = i;
                 b = &pts[i];
             }
+        }
+        if (b == nullptr) 
+        {
+            throw logic_error("Error: there are no points left!");
         }
         cv::line(data, *a, *b, n++, 2);
         std::swap(pts[b_index], pts[pts.size()-2]);

@@ -89,10 +89,10 @@ cv::Mat SobelVoronizer::run(cv::Mat& input)
 {
     cv::Mat data;
     cv::cvtColor(input, data, cv::COLOR_RGB2GRAY);
-    cv::medianBlur(data, data, median_pre);
+    cv::medianBlur(data, data, (int)median_pre);
     cv::Sobel(data, data, CV_8U, 1, 1, 5);
-    cv::threshold(data, data, edge_treshold, 255, cv::THRESH_BINARY);
-    cv::medianBlur(data, data, median_post);
+    cv::threshold(data, data, (double)edge_treshold, 255, cv::THRESH_BINARY);
+    cv::medianBlur(data, data, (int)median_post);
 
     Separator separator(cluster_size_treshold, 0);
     data.convertTo(data, CV_16S);
@@ -178,8 +178,8 @@ std::unique_ptr<KMeansVoronizerLines> KMeansVoronizerLines::create(const std::st
 cv::Mat AbstractKMeansVoronizer::run(cv::Mat& input)
 {
     cv::Mat data;
-    cv::medianBlur(input, data, median_pre); // apply median filter to speed-up the process and remove small regions
-    kmeansColor(data, data, n_colors);
+    cv::medianBlur(input, data, (int)median_pre); // apply median filter to speed-up the process and remove small regions
+    kmeansColor(data, data, (int)n_colors);
     cv::cvtColor(data, data, cv::COLOR_RGB2GRAY);
 
     Separator separator(cluster_size_treshold, -1);
@@ -210,15 +210,15 @@ cv::Mat KMeansVoronizerCircles::drawGenerators(const Groups* groups, cv::Size im
     cv::Mat im = cv::Mat::zeros(image_size, CV_16S);
     for (auto& group : *groups)
     {
-        size_t row = 0;
-        size_t col = 0;
+        int row = 0;
+        int col = 0;
         for (auto& cell : group.second)
         {
             row += cell->row;
             col += cell->col;
         }
-        row /= group.second.size();
-        col /= group.second.size();
+        row = (int)(row/group.second.size());
+        col = (int)(col/group.second.size());
         im.at<int16_t>(row,col) = group.first;
     }
     return im;
@@ -231,16 +231,16 @@ cv::Mat KMeansVoronizerLines::drawGenerators(const Groups* groups, cv::Size imag
     points.reserve(groups->size());
     for (auto& group : *groups)
     {
-        size_t row = 0;
-        size_t col = 0;
+        int row = 0;
+        int col = 0;
         for (auto& cell : group.second)
         {
             row += cell->row;
             col += cell->col;
         }
-        row /= group.second.size();
-        col /= group.second.size();
-        points.push_back(cv::Point2f(row,col));
+        row = (int)(row/group.second.size());
+        col = (int)(col/group.second.size());
+        points.push_back(cv::Point2f((float)row,(float)col));
     }
 
     return linesFromClosestPointsRandom(points, image_size, n_iter);
@@ -320,7 +320,7 @@ cv::Mat SIFTVoronizerCircles::drawGenerators(std::vector<cv::KeyPoint> keypoints
     int16_t n = 1;
     if (radius < 0)
         for (auto& k : keypoints)
-            cv::circle(data, k.pt, k.size*radius_multiplier, n++, thickness);
+            cv::circle(data, k.pt, (int)(k.size*radius_multiplier), n++, thickness);
     else
         for (auto& k : keypoints)
             cv::circle(data, k.pt, radius, n++, thickness);

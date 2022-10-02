@@ -6,7 +6,7 @@
 
 using namespace std;
 
-Cell::Cell(size_t row, size_t col, State state)
+Cell::Cell(int row, int col, State state)
 : row(row), col(col), state(state)
 {}
 
