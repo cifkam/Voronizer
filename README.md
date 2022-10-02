@@ -1,10 +1,12 @@
 # Voronizer
 
 ## Build
-Requires OpenCV >= 4.4.0 and at least C++17
+Requires OpenCV >= 4.4.0 and at least C++17:
 ```
-cmake -DCMAKE_BUILD_TYPE=Release . && make
+cmake -DCMAKE_BUILD_TYPE=Release .
+make
 ```
+or use corresponding Windows/Linux x86-64 pre-built binaries in `Build` directory.
 
 ## Usage
 ```
