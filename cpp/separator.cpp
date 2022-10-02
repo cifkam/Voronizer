@@ -159,10 +159,13 @@ size_t Separator::compute(cv::Mat& input_data, cv::Mat& output_data,std::unique_
     }
 
     // Grow pixels after removing areas with #pixels < trehold
-    auto tg = AfterTresholdGrowing(input_data.rows, input_data.cols);
-    tg.compute(data, data, move(groups), move(cell_mat));
-    groups = tg.clear_groups();
-    cell_mat = tg.clear_cellmat();
+    if (treshold > 0)
+    {
+        auto tg = AfterTresholdGrowing(input_data.rows, input_data.cols);
+        tg.compute(data, data, move(groups), move(cell_mat));
+        groups = tg.clear_groups();
+        cell_mat = tg.clear_cellmat();
+    }
     
 
     this->input_data = nullptr;
@@ -214,4 +217,48 @@ void Separator::AfterTresholdGrowing::init_funct(set<Cell*>& opened, cv::Mat& ou
         }
     }
     
+}
+
+void Separator::AfterTresholdGrowing::Remap(cv::Mat& data)
+{
+    /* */
+    if (groups->size() == 0)
+        return;
+    auto it = groups->begin();
+    
+    if (it->first < 0)
+        throw logic_error("Error: Found negative group id!");
+    
+    if (it->first == 0)
+        ++it;
+
+    int n = 1;
+    while (it != groups->end())
+    {
+        if (it->first != n)
+        {
+            auto node = groups->extract(it);
+            node.key() = n;
+            groups->insert(std::move(node));
+            ++n;
+        }
+        ++it;
+    }
+
+    for (auto& iter : *groups)
+        if (iter.first != data.at<int16_t>(iter.second[0]->row, iter.second[0]->col))
+            for (auto& c : iter.second)
+                assign(data, iter.first, c);
+
+}
+
+size_t Separator::AfterTresholdGrowing::compute(
+    cv::Mat& data,
+    cv::Mat& output,
+    std::unique_ptr<Groups>&& groups,
+    std::unique_ptr<CellMat>&& cell_mat)
+{
+    auto x = Growing::compute(data,output,move(groups),move(cell_mat));
+    Remap(output);
+    return x;
 }

@@ -15,11 +15,17 @@
             "args": [
                 //"-m", "sift-lines", "-o", ",200", //keypoint treshold, radius[-1 to fill or >=0], thickness, radius_multiplier
                 //"-m", "kmeans-lines", "-o", ",,,200", //median_pre, n_colors, cluster_size_treshold
-                "-m", "sobel",
-                //"-c", "twilight",
-                //"-s", "3",
+                "-m", "sobel", "-o", ",,,100", //median_pre, edge_treshold, median_post, cluster_size_treshold
+                "-c", "twilight",
+                //"-s", "0",
                 //"-f", "output.png"
-                "img/lena.jpg",
+
+                //"img/lena.jpg"
+                //"img/kupka.png"
+                //"img/carqueiranne.jpeg"
+                //"img/collobrieres.jpeg"
+                "img/galerie-svatos.jpeg"
+                //"img/porquerolles.jpeg"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

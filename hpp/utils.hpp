@@ -14,7 +14,7 @@
 
 #define nameof(x) #x
 
-/*
+
 #include <chrono>
 #include <functional>
 template <typename units = std::chrono::milliseconds, typename clock = std::chrono::steady_clock>
@@ -26,7 +26,7 @@ int64_t measureTime(std::function<void(void)> fun)
     return std::chrono::duration_cast<units>(end_time - start_time).count();
 
 }
-*/
+
 
 
 void waitKey();

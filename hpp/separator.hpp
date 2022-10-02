@@ -28,7 +28,12 @@ protected:
         int rows;
         int cols;
         AfterTresholdGrowing(int rows, int cols);
+        virtual size_t compute(cv::Mat& data, cv::Mat& output,
+            std::unique_ptr<Groups>&& groups = nullptr,
+            std::unique_ptr<CellMat>&& cell_mat = nullptr) override;
+        
     private:
+        void Remap(cv::Mat& data);
         virtual void init_funct(std::set<Cell*>& opened, cv::Mat& data, bool create_new_cellmat) override;
 
     };
