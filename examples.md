@@ -1,7 +1,7 @@
 # Examples
 
 ## Colormaps
-The image can be colorized by OpenCV's colormaps instead of using the original image as color template. This can be done by specifying the name of colormap by `-c` option (see [OpenCV documentation](https://docs.opencv.org/4.4.0/d3/d50/group__imgproc__colormap.html#ga9a805d8262bcbe273f16be9ea2055a65) for the detailed view of all colormaps with images). The color depends on the x a y coordinates of each area (but also on implementation of selected mode). This can be prevented by randomizing the colors by using `-r` flag, as seen in the second row of the displayd examples:\
+The image can be colorized by OpenCV's colormaps instead of using the original image as color template. This can be done by specifying the name of colormap by `-c` option (see [OpenCV documentation](https://docs.opencv.org/4.4.0/d3/d50/group__imgproc__colormap.html#ga9a805d8262bcbe273f16be9ea2055a65) for the detailed view of all colormaps with images). The color depends on the x a y coordinates of each area (but also on implementation of selected mode). This can be prevented by randomizing the colors by using `-r` flag, as seen in the second row of the following examples:
 
 | bone | cividis | turbo| twilight |
 | --- | --- | --- | --- |
