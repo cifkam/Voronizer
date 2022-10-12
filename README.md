@@ -1,7 +1,7 @@
 # Voronizer
 
 ## Build
-Requires OpenCV >= 4.4.0 and at least C++17
+Requires OpenCV >= 4.4.0 and at least C++17:
 ```
 cmake -DCMAKE_BUILD_TYPE=Release .
 make
@@ -139,3 +139,4 @@ Without any smoothing the edges of areas are quite hard and unpleasant. To avoid
 | <img src="examples/lena-sift-lines-default.png" width="200"/> | <img src="examples/lena-sift-lines-0.png" width="200"/> | <img src="examples/lena-sift-lines-3_20_.png" width="200"/> | <img src="examples/lena-sift-lines-1_100.png" width="200"/> |
 | <img src="examples/carqueiranne-sift-lines-default.png" width="200"/> | <img src="examples/carqueiranne-sift-lines-0.png" width="200"/> | <img src="examples/carqueiranne-sift-lines-3_20_.png" width="200"/> | <img src="examples/carqueiranne-sift-lines-1_100.png" width="200"/> |
 | <img src="examples/collobrieres-sift-lines-default.png" width="200"/> | <img src="examples/collobrieres-sift-lines-0.png" width="200"/> | <img src="examples/collobrieres-sift-lines-3_20_.png" width="200"/> | <img src="examples/collobrieres-sift-lines-1_100.png" width="200"/> |
+
