@@ -180,7 +180,6 @@ void kmeansColor(cv::Mat ocv, cv::Mat& output, int K)
         int center_id = labels.at<int>(i);
         p[i] = centers.at<cv::Vec3f>(center_id);
     }
-
     // back to 2d, and uchar:
     output = data.reshape(3, ocv.rows);
     output.convertTo(output, CV_8U);

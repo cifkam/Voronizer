@@ -59,7 +59,7 @@ bool run(const string& img_path, const string& mode, const string& options, bool
         throw logic_error("Mode not yet implemented");
 
     if (voronizer == nullptr)
-        help_exit("Couldn't parse options");
+        help_exit("Invalid -o options. Read the description of --mode to see allowed values for the selected mode.");
 
     if (cmap)
         voronizer->set_colormap(cmap_type, random);
@@ -172,8 +172,9 @@ int main( int argc, char** argv)
 
     args.add_argument("-c", "--colormap")
         .help("OpenCV colormap name to use instead of original image as color template:\n"
-        "\t\t{autumn, bone, jet, winter, rainbow, ocean, summer, spring, cool, hsv, pink, hot,\n"
-        "\t\tparula, magma, inferno, plasma, viridis, cividis, twilight, twilight_shifted, turbo}")
+        "\t\t{autumn, bone, jet, winter, rainbow, ocean, summer, spring, cool, hsv, pink,\n"
+        "\t\thot, parula, magma, inferno, plasma, viridis, cividis, twilight,\n"
+        "\t\ttwilight_shifted, turbo, deepgreen}")
         .default_value<string>("");
 
     args.add_argument("-f", "--file")
