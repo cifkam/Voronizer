@@ -90,14 +90,6 @@ Optional arguments:
 ## Examples
 Here are just few output examples, more can be viewed in [examples.md](examples.md).
 
-### Colormaps
-The image can be colorized by OpenCV's colormaps instead of using the original image as color template. This can be done by specifying the name of colormap by `-c` option (see [OpenCV documentation](https://docs.opencv.org/4.4.0/d3/d50/group__imgproc__colormap.html#ga9a805d8262bcbe273f16be9ea2055a65) for the detailed view of all colormaps with images). The color depends on the x a y coordinates of each area (but also on implementation of selected mode). This can be prevented by randomizing the colors by using `-r` flag, as seen in the second row of the following examples:
-
-| bone | cividis | turbo| twilight |
-| --- | --- | --- | --- |
-| <img src="examples/cmap_bone.png" width="400"/>        | <img src="examples/cmap_cividis.png" width="400"/>        | <img src="examples/cmap_turbo.png" width="400"/>        | <img src="examples/cmap_twilight.png" width="400"/> |
-| <img src="examples/cmap_bone_random.png" width="400"/> | <img src="examples/cmap_cividis_random.png" width="400"/> | <img src="examples/cmap_turbo_random.png" width="400"/> | <img src="examples/cmap_twilight_random.png" width="400"/> |
-
 ### Smoothing
 Without any smoothing the edges of areas are quite hard and unpleasant. To avoid this, level of edge smoothing can be defined by `-s` option:
 
@@ -130,3 +122,11 @@ Without any smoothing the edges of areas are quite hard and unpleasant. To avoid
 | -o 1,100 | default | -o 3,20 |
 | --- | --- | --- |
 | <img src="examples/lena-sift-lines-1_100.png" width="400"/> | <img src="examples/carqueiranne-sift-lines-default.png" width="400"/> | <img src="examples/collobrieres-sift-lines-3_20_.png" width="400"/> |
+
+### Colormaps
+The image can be colorized by OpenCV's colormaps instead of using the original image as color template. This can be done by specifying the name of colormap by `-c` option (see [OpenCV documentation](https://docs.opencv.org/4.4.0/d3/d50/group__imgproc__colormap.html#ga9a805d8262bcbe273f16be9ea2055a65) for the detailed view of all colormaps with images). The color depends on the x a y coordinates of each area (but also on implementation of selected mode). This can be prevented by randomizing the colors by using `-r` flag, as seen in the second row of the following examples:
+
+| bone | cividis | turbo| twilight |
+| --- | --- | --- | --- |
+| <img src="examples/cmap_bone.png" width="400"/>        | <img src="examples/cmap_cividis.png" width="400"/>        | <img src="examples/cmap_turbo.png" width="400"/>        | <img src="examples/cmap_twilight.png" width="400"/> |
+| <img src="examples/cmap_bone_random.png" width="400"/> | <img src="examples/cmap_cividis_random.png" width="400"/> | <img src="examples/cmap_turbo_random.png" width="400"/> | <img src="examples/cmap_twilight_random.png" width="400"/> |
