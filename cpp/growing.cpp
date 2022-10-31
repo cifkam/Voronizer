@@ -6,11 +6,11 @@
 
 using namespace std;
 
-Cell::Cell(int row, int col, State state)
+Pixel::Pixel(int row, int col, State state)
 : row(row), col(col), state(state)
 {}
 
-bool operator<(const Cell& lhs, const Cell& rhs)
+bool operator<(const Pixel& lhs, const Pixel& rhs)
 {
     return lhs.row < rhs.row || (lhs.row == rhs.row && lhs.col < rhs.col);
 }
@@ -20,31 +20,31 @@ Growing::Growing(Neighborhood neighborhood)
  : neighborhood(neighborhood)
 {}
 
-void Growing::post_funct(std::vector<Cell*>& processed, cv::Mat& data)
+void Growing::post_funct(std::vector<Pixel*>& processed, cv::Mat& data)
 {
-    for (auto& cell : processed)
+    for (auto& pixel : processed)
     {
-        int cls = data.at<int_t>(cell->row, cell->col);
-        add_to_group(cell, cls);
+        int cls = data.at<int_t>(pixel->row, pixel->col);
+        add_to_group(pixel, cls);
     }
 }
 
-void Growing::add_to_group(Cell* cell, int cls)
+void Growing::add_to_group(Pixel* pixel, int cls)
 {
     auto it = groups->find(cls);
     if (it == groups->end())
-        groups->emplace_hint(it, cls, std::vector<Cell*>(1, cell)); // not found
+        groups->emplace_hint(it, cls, std::vector<Pixel*>(1, pixel)); // not found
     else
-        it->second.push_back(cell); //found
+        it->second.push_back(pixel); //found
 }
     
 
-void Growing::assign(cv::Mat& data, Cell* from, Cell* to)
+void Growing::assign(cv::Mat& data, Pixel* from, Pixel* to)
 {
     data.at<int_t>(to->row, to->col) = data.at<int_t>(from->row, from->col);
 }
 
-void Growing::assign(cv::Mat& data, int value, Cell* to)
+void Growing::assign(cv::Mat& data, int value, Pixel* to)
 {
     data.at<int_t>(to->row, to->col) = value;
 }
@@ -57,20 +57,20 @@ std::unique_ptr<Groups> Growing::clear_groups()
     return g;
 }
 
-std::unique_ptr<CellMat> Growing::clear_cellmat()
+std::unique_ptr<PixelMat> Growing::clear_pixelmat()
 {
-    auto c = move(cell_mat);
-    cell_mat = nullptr;
+    auto c = move(pixel_mat);
+    pixel_mat = nullptr;
     return c;
 }
 
 
-bool Growing::grow_condition(const cv::Mat& input_data, const cv::Mat& data, Cell* cell, Cell* neighbor)
+bool Growing::grow_condition(const cv::Mat& input_data, const cv::Mat& data, Pixel* pixel, Pixel* neighbor)
 {
     return neighbor->state == State::unseen;   
 }
 
-size_t Growing::compute(cv::Mat& input_data, cv::Mat& output_data, unique_ptr<Groups>&& groups_init, unique_ptr<CellMat>&& cellmat_init)
+size_t Growing::compute(cv::Mat& input_data, cv::Mat& output_data, unique_ptr<Groups>&& groups_init, unique_ptr<PixelMat>&& pixelmat_init)
 {
     cv::Mat data = input_data.clone();
     if (groups_init == nullptr)
@@ -78,50 +78,50 @@ size_t Growing::compute(cv::Mat& input_data, cv::Mat& output_data, unique_ptr<Gr
     else
         groups = move(groups_init);
 
-    bool create_new_cellmat = false;
-    if (cellmat_init == nullptr)
-        create_new_cellmat = true;
+    bool create_new_pixelmat = false;
+    if (pixelmat_init == nullptr)
+        create_new_pixelmat = true;
     else
-        cell_mat = move(cellmat_init);
+        pixel_mat = move(pixelmat_init);
 
-    size_t steps = compute_inner(data, create_new_cellmat);
+    size_t steps = compute_inner(data, create_new_pixelmat);
     output_data = move(data);
     return steps;
 }
 
-size_t Growing::compute_inner(cv::Mat& data, bool create_new_cellmat)
+size_t Growing::compute_inner(cv::Mat& data, bool create_new_pixelmat)
 {
     assert(data.depth() == CV_16S);
 
     bool bool_4_8 = (neighborhood == Neighborhood::n4);
-    set<Cell*> opened;
-    init_funct(opened, data, create_new_cellmat);
+    set<Pixel*> opened;
+    init_funct(opened, data, create_new_pixelmat);
     
     size_t steps = 0;
 
-    vector<Cell*> processed;
+    vector<Pixel*> processed;
 
     while (opened.size() > 0)
     {
-        set<Cell*> new_cells;
-        for (auto cell : opened)
+        set<Pixel*> new_pixels;
+        for (auto pixel : opened)
         {
-            for (auto&& neighbor : get_neighbors(cell, bool_4_8, data.cols, data.rows))
-                if (grow_condition(data, data, cell, neighbor))
+            for (auto&& neighbor : get_neighbors(pixel, bool_4_8, data.cols, data.rows))
+                if (grow_condition(data, data, pixel, neighbor))
                 {
-                    new_cells.insert(neighbor);
-                    assign(data, cell, neighbor);
+                    new_pixels.insert(neighbor);
+                    assign(data, pixel, neighbor);
                     neighbor->state = State::opened;
                 }
             
-            cell->state = State::closed;
-            processed.push_back(cell);
+            pixel->state = State::closed;
+            processed.push_back(pixel);
         }
 
         if (neighborhood == Neighborhood::alternating)
             bool_4_8 = !bool_4_8;
         
-        opened = move(new_cells);
+        opened = move(new_pixels);
         steps += 1;
     }
     post_funct(processed, data);
@@ -129,22 +129,22 @@ size_t Growing::compute_inner(cv::Mat& data, bool create_new_cellmat)
 };
 
 
-vector<Cell*> Growing::get_neighbors(
-    const Cell* cell,
+vector<Pixel*> Growing::get_neighbors(
+    const Pixel* pixel,
     bool bool_4_8,
     size_t cols,
     size_t rows
 ){
     vector<int> row_delta;
     vector<int> col_delta;
-    vector<Cell*> neighbors;
+    vector<Pixel*> neighbors;
 
-    if (cell->row == 0)           row_delta = {0,1};
-    else if (cell->row == rows-1) row_delta = {-1,0};
+    if (pixel->row == 0)           row_delta = {0,1};
+    else if (pixel->row == rows-1) row_delta = {-1,0};
     else                          row_delta = {-1,0,1};
 
-    if (cell->col == 0)           col_delta = {0,1};
-    else if (cell->col == cols-1) col_delta = {-1,0};
+    if (pixel->col == 0)           col_delta = {0,1};
+    else if (pixel->col == cols-1) col_delta = {-1,0};
     else                          col_delta = {-1,0,1};
 
     if (bool_4_8)
@@ -152,13 +152,13 @@ vector<Cell*> Growing::get_neighbors(
         for (auto r : row_delta)
         {
             if (r == 0) continue;
-            Cell* c = &(*cell_mat)[cell->row+r][cell->col]; 
+            Pixel* c = &(*pixel_mat)[pixel->row+r][pixel->col]; 
             neighbors.push_back(c);
         }
         for (auto c : col_delta)
         {
             if (c == 0) continue;
-            neighbors.push_back(&(*cell_mat)[cell->row][cell->col+c]);
+            neighbors.push_back(&(*pixel_mat)[pixel->row][pixel->col+c]);
         }
     }
     else
@@ -167,7 +167,7 @@ vector<Cell*> Growing::get_neighbors(
             for (auto c : col_delta)
             {
                 if (r == 0 && c == 0) continue;
-                neighbors.push_back(&(*cell_mat)[cell->row+r][cell->col+c]);
+                neighbors.push_back(&(*pixel_mat)[pixel->row+r][pixel->col+c]);
             }
     }
 

@@ -18,7 +18,7 @@ public:
     Separator(size_t treshold = 50, int bg_value = 0);
     virtual size_t compute(cv::Mat& data, cv::Mat& output,
         std::unique_ptr<Groups>&& groups = nullptr,
-        std::unique_ptr<CellMat>&& cell_mat = nullptr) override;
+        std::unique_ptr<PixelMat>&& pixel_mat = nullptr) override;
 
 protected:
     // Helper class to remove regions that were removed by Separator because of region size tresholding
@@ -30,11 +30,11 @@ protected:
         AfterTresholdGrowing(int rows, int cols);
         virtual size_t compute(cv::Mat& data, cv::Mat& output,
             std::unique_ptr<Groups>&& groups = nullptr,
-            std::unique_ptr<CellMat>&& cell_mat = nullptr) override;
+            std::unique_ptr<PixelMat>&& pixel_mat = nullptr) override;
         
     private:
         void Remap(cv::Mat& data);
-        virtual void init_funct(std::set<Cell*>& opened, cv::Mat& data, bool create_new_cellmat) override;
+        virtual void init_funct(std::set<Pixel*>& opened, cv::Mat& data, bool create_new_pixelmat) override;
 
     };
 
@@ -45,10 +45,10 @@ protected:
 
     const cv::Mat* input_data;
 
-    virtual void init_funct(std::set<Cell*>& opened, cv::Mat& data, bool create_new_cellmat) override;
-    virtual void post_funct(std::vector<Cell*>& processed, cv::Mat& data) override;
-    virtual void add_to_group(Cell* cell, int cls) override;
-    virtual bool grow_condition(const cv::Mat& data, const cv::Mat& output, Cell* cell, Cell* neighbor) override;
+    virtual void init_funct(std::set<Pixel*>& opened, cv::Mat& data, bool create_new_pixelmat) override;
+    virtual void post_funct(std::vector<Pixel*>& processed, cv::Mat& data) override;
+    virtual void add_to_group(Pixel* pixel, int cls) override;
+    virtual bool grow_condition(const cv::Mat& data, const cv::Mat& output, Pixel* pixel, Pixel* neighbor) override;
 
 };
 

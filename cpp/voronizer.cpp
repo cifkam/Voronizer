@@ -109,7 +109,7 @@ cv::Mat SobelVoronizer::run(cv::Mat& input)
     separator.compute(data, data);
     
     Voronoi voronoi;
-    voronoi.compute(data, data, separator.clear_groups(), separator.clear_cellmat());
+    voronoi.compute(data, data, separator.clear_groups(), separator.clear_pixelmat());
 
     return colorize_funct(input, data, &*voronoi.groups);
 }
@@ -227,7 +227,7 @@ cv::Mat AbstractKMeansVoronizer::run(cv::Mat& input)
     */
 
     Voronoi voronoi;
-    voronoi.compute(im, im, nullptr, separator.clear_cellmat());
+    voronoi.compute(im, im, nullptr, separator.clear_pixelmat());
 
     groups = voronoi.clear_groups();
     return colorize_funct(input, im, &*groups);
@@ -240,10 +240,10 @@ cv::Mat KMeansVoronizerCircles::drawGenerators(const Groups* groups, cv::Size im
     {
         size_t row = 0;
         size_t col = 0;
-        for (auto& cell : group.second)
+        for (auto& pixel : group.second)
         {
-            row += cell->row;
-            col += cell->col;
+            row += pixel->row;
+            col += pixel->col;
         }
         row /= group.second.size();
         col /= group.second.size();
@@ -261,10 +261,10 @@ cv::Mat KMeansVoronizerLines::drawGenerators(const Groups* groups, cv::Size imag
     {
         int row = 0;
         int col = 0;
-        for (auto& cell : group.second)
+        for (auto& pixel : group.second)
         {
-            row += cell->row;
-            col += cell->col;
+            row += pixel->row;
+            col += pixel->col;
         }
         row = (int)(row/group.second.size());
         col = (int)(col/group.second.size());
