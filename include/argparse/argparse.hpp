@@ -939,8 +939,10 @@ public:
                           default_arguments add_args = default_arguments::all)
       : m_program_name(std::move(program_name)), m_version(std::move(version)) {
     if ((add_args & default_arguments::help) == default_arguments::help) {
+      // For some unknown reason this causes segmentation fault, so we implement it manually
+      /*
       add_argument("-h", "--help")
-          .action([&](const auto &/*unused*/) {
+          .action([&](const auto &) {
             std::cout << help().str();
             std::exit(0);
           })
@@ -948,6 +950,7 @@ public:
           .help("shows help message and exits")
           .implicit_value(true)
           .nargs(0);
+      */
     }
     if ((add_args & default_arguments::version) == default_arguments::version) {
       add_argument("-v", "--version")

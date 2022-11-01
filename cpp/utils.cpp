@@ -30,6 +30,7 @@ bool strToColormap(string name, cv::ColormapTypes& output)
     strLower(name);
     map<string,cv::ColormapTypes> m =
     {
+        {"bw", (cv::ColormapTypes)-1},
         {"autumn",cv::COLORMAP_AUTUMN},
         {"bone",cv::COLORMAP_BONE},
         {"jet",cv::COLORMAP_JET},
@@ -125,7 +126,8 @@ cv::Mat colorizeByCmap(const cv::Mat& input, cv::ColormapTypes map, bool copy, b
     data.convertTo(data, CV_8U);
     if (apply_random_LUT)
         randomLUT(data, data);
-    cv::applyColorMap(data, data, map);
+    if (map != (cv::ColormapTypes)-1) // cmap is not "bw"
+        cv::applyColorMap(data, data, map);
     return data;
 }
 

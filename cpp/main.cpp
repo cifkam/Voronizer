@@ -26,7 +26,9 @@ argparse::ArgumentParser args;
 
 void help_exit(const string& message, int exitcode=1)
 {
-    cerr << message << endl << args;
+    if (message.size() > 0)
+        cerr << message << endl;
+    cerr << args;
     exit(exitcode);
 }
 
@@ -80,6 +82,11 @@ bool run(const string& img_path, const string& mode, const string& options, bool
 int main( int argc, char** argv)
 {
     args = argparse::ArgumentParser("Voronoizer", "1.0");
+    args.add_argument("-h", "--help")
+        .help("shows help message and exits")
+        .action([&](const auto &) { help_exit("", 0); } )
+        .default_value<bool>(false)
+        .implicit_value(true);
     args.add_argument("image")
         .help("path to image to voronize")
         .required();
