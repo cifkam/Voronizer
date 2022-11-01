@@ -21,7 +21,10 @@ public:
         std::unique_ptr<PixelMat>&& pixel_mat = nullptr) override;
 
 protected:
-    // Helper class to remove regions that were removed by Separator because of region size tresholding
+    /* Helper class to remove regions that were removed by Separator because of region size tresholding.
+     * Find the border of the areas of pixels that were removed by tresholding (i.e. 'background' pixels)
+     * and grows the neighbors to remove these areas
+     */
     class AfterTresholdGrowing : public Growing
     {
     public:
@@ -31,15 +34,12 @@ protected:
         virtual size_t compute(cv::Mat& data, cv::Mat& output,
             std::unique_ptr<Groups>&& groups = nullptr,
             std::unique_ptr<PixelMat>&& pixel_mat = nullptr) override;
-        
     private:
-        void Remap(cv::Mat& data);
+        void remap(cv::Mat& data);
         virtual void init_funct(std::set<Pixel*>& opened, cv::Mat& data, bool create_new_pixelmat) override;
-
     };
 
     int n;
-
     int last_row;
     int last_col;
 

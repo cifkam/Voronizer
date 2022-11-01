@@ -219,9 +219,8 @@ void Separator::AfterTresholdGrowing::init_funct(set<Pixel*>& opened, cv::Mat& o
     
 }
 
-void Separator::AfterTresholdGrowing::Remap(cv::Mat& data)
+void Separator::AfterTresholdGrowing::remap(cv::Mat& data)
 {
-    /* */
     if (groups->size() == 0)
         return;
 
@@ -263,6 +262,7 @@ size_t Separator::AfterTresholdGrowing::compute(
     std::unique_ptr<PixelMat>&& pixel_mat)
 {
     auto x = Growing::compute(data,output,move(groups),move(pixel_mat));
-    Remap(output);
+    // because some of the areas were removed during tresholding, we need to remap the group IDs to [1..n]
+    remap(output);
     return x;
 }

@@ -8,6 +8,7 @@ Without any smoothing the edges of areas are quite hard and unpleasant. To avoid
 | <img src="examples/smooth_0.png" width="400"/> | <img src="examples/smooth_3.png" width="400"/> | <img src="examples/smooth_10.png" width="400"/> | <img src="examples/smooth_20.png" width="400"/> |
 
 ## Modes
+By chosing different mode and different mode options you can achive significant changes in output. Here are some examples to illustrate the difference:
 ### sobel
 | default | -o ,10 | -o ,100 | -o 0,30,0 |
 | --- | --- | --- | --- |
