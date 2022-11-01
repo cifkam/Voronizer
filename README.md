@@ -13,7 +13,7 @@ Voronizer can be runned from terminal. e.g:
 ```
 ./Voronizer -m sift-circles -o 10,,1,0.5 img/lena.jpg 
 ```
-will run the Voronizer in `sift-circles` (mode with mode-specific options defined by `-o` options) and display the result. The image can be also saved to file instead by specifying the path by `-f` option. All options are explained in following description, which can be also display by running the Voronizer without any arguments (or with `-h` option).
+will run the Voronizer in `sift-circles` mode (with mode-specific options defined by `-o` options) and display the result. The image can be also saved to file instead by specifying the path by `-f` option. All options are explained in following description, which can be also display by running the Voronizer without any arguments (or with `-h` option).
 
 
 ```
@@ -130,3 +130,6 @@ The image can be colorized by OpenCV's colormaps instead of using the original i
 | --- | --- | --- | --- |
 | <img src="examples/cmap_bone.png" width="400"/>        | <img src="examples/cmap_cividis.png" width="400"/>        | <img src="examples/cmap_turbo.png" width="400"/>        | <img src="examples/cmap_twilight.png" width="400"/> |
 | <img src="examples/cmap_bone_random.png" width="400"/> | <img src="examples/cmap_cividis_random.png" width="400"/> | <img src="examples/cmap_turbo_random.png" width="400"/> | <img src="examples/cmap_twilight_random.png" width="400"/> |
+
+## Developer Documentation
+See [dev_docs.md](dev_docs.md).
