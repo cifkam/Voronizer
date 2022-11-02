@@ -1,4 +1,5 @@
 # Voronizer
+Voronizer is tool which transforms a raster image into raster voronoi diagram. It offers several modes which differs in the way of creating the generators. These modes have their specific options which can further modify the behavior of the program. By default the colors of the final voronoi cells are chosen to be the mean colors of underlying pixels (of the input image) in that region, but user is also allowed to choose an OpenCV colormap to use instead. The program also offers an option of smoothing the edges of voronoi cells.
 
 ## Build
 Requires OpenCV >= 4.4.0 and at least C++17:
