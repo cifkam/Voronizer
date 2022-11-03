@@ -37,6 +37,7 @@ void smoothEdges(cv::InputArray src, cv::OutputArray dst, int ksize=9, int iter=
 cv::Mat colorizeByCmap(const cv::Mat& input, cv::ColormapTypes map = cv::COLORMAP_TWILIGHT, bool copy = true, bool apply_random_LUT = false);
 cv::Mat colorizeByTemplate(const cv::Mat& color_template, const Groups* voronoi_groups);
 void kmeansColor(cv::Mat ocv, cv::Mat& output, int K);
+void fitImage(const cv::Mat& src, cv::Mat& dst, uint size);
 
 cv::Mat linesFromClosestPointsRandom(std::vector<cv::Point2f>& pts, cv::Size image_size, size_t iter, size_t pts_left_out = 3);
 

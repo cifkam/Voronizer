@@ -186,6 +186,7 @@ void kmeansColor(cv::Mat ocv, cv::Mat& output, int K)
     output = data.reshape(3, ocv.rows);
     output.convertTo(output, CV_8U);
 }
+
 /*
 For each point in "pts" (in random order), select "iter" random other (unused) points and draw a draw a line to the closest one.
 You may specify, how many last points to leave out (points that will not be paired - may be useful, as there will be less points in the final iterations)
@@ -233,3 +234,9 @@ cv::Mat linesFromClosestPointsRandom(std::vector<cv::Point2f>& pts, cv::Size ima
     return data;
 }
 
+void fitImage(const cv::Mat& src, cv::Mat& dst, uint size)
+{
+    cv::Size s = src.size();
+    double f = size/(double)max(s.width, s.height);
+    cv::resize(src, dst, cv::Size(), f, f);
+}

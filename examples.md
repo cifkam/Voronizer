@@ -8,37 +8,37 @@ Without any smoothing the edges of areas are quite hard and unpleasant. To avoid
 | <img src="examples/smooth_0.png" width="400"/> | <img src="examples/smooth_3.png" width="400"/> | <img src="examples/smooth_10.png" width="400"/> | <img src="examples/smooth_20.png" width="400"/> |
 
 ## Modes
-By chosing different mode and different mode options you can achive significant changes in output. Here are some examples to illustrate the difference:
+By chosing different mode and different mode arguments you can achive significant changes in output. Here are some examples to illustrate the difference:
 ### sobel
-| default | -o ,10 | -o ,100 | -o 0,30,0 |
+| default | -a ,10 | -a ,100 | -a 0,30,0 |
 | --- | --- | --- | --- |
 | <img src="examples/lena-sobel-default.png" width="400"/> | <img src="examples/lena-sobel-_10.png" width="400"/> | <img src="examples/lena-sobel-_100.png" width="400"/> | <img src="examples/lena-sobel-0_30_0.png" width="400"/> |
 | <img src="examples/carqueiranne-sobel-default.png" width="400"/> | <img src="examples/carqueiranne-sobel-_10.png" width="400"/> | <img src="examples/carqueiranne-sobel-_100.png" width="400"/> | <img src="examples/carqueiranne-sobel-0_30_0.png" width="400"/> |
 | <img src="examples/collobrieres-sobel-default.png" width="400"/> | <img src="examples/collobrieres-sobel-_10.png" width="400"/> | <img src="examples/collobrieres-sobel-_100.png" width="400"/> | <img src="examples/collobrieres-sobel-0_30_0.png" width="400"/> |
 
 ### kmeans-circles
-| default | -o ,30,5 | -o 1,,3,14,2 | -o ,,20,30,2 |
+| default | -a ,30,5 | -a 1,,3,14,2 | -a ,,20,30,2 |
 | --- | --- | --- | --- |
 | <img src="examples/lena-kmeans-circles-default.png" width="400"/> | <img src="examples/lena-kmeans-circles-_30_5.png" width="400"/> | <img src="examples/lena-kmeans-circles-1__3_14_2.png" width="400"/> | <img src="examples/lena-kmeans-circles-__20_30_2.png" width="400"/> |
 | <img src="examples/carqueiranne-kmeans-circles-default.png" width="400"/> | <img src="examples/carqueiranne-kmeans-circles-_30_5.png" width="400"/> | <img src="examples/carqueiranne-kmeans-circles-1__3_14_2.png" width="400"/> | <img src="examples/carqueiranne-kmeans-circles-__20_30_2.png" width="400"/> |
 | <img src="examples/collobrieres-kmeans-circles-default.png" width="400"/> | <img src="examples/collobrieres-kmeans-circles-_30_5.png" width="400"/> | <img src="examples/collobrieres-kmeans-circles-1__3_14_2.png" width="400"/> | <img src="examples/collobrieres-kmeans-circles-__20_30_2.png" width="400"/> |
 
 ### kmeans-lines
-| default | -o ,,1  | -o ,,5,10 | -o ,,5,100 |
+| default | -a ,,1  | -a ,,5,10 | -a ,,5,100 |
 | --- | --- | --- | --- |
 | <img src="examples/lena-kmeans-lines-default.png" width="400"/> | <img src="examples/lena-kmeans-lines-__1.png" width="400"/> | <img src="examples/lena-kmeans-lines-__5_10.png" width="400"/> | <img src="examples/lena-kmeans-lines-__5_100.png" width="400"/> |
 | <img src="examples/carqueiranne-kmeans-lines-default.png" width="400"/> | <img src="examples/carqueiranne-kmeans-lines-__1.png" width="400"/> | <img src="examples/carqueiranne-kmeans-lines-__5_10.png" width="400"/> | <img src="examples/carqueiranne-kmeans-lines-__5_100.png" width="400"/> |
 | <img src="examples/collobrieres-kmeans-lines-default.png" width="400"/> | <img src="examples/collobrieres-kmeans-lines-__1.png" width="400"/> | <img src="examples/collobrieres-kmeans-lines-__5_10.png" width="400"/> | <img src="examples/collobrieres-kmeans-lines-__5_100.png" width="400"/> |
 
 ### sift-circles
-| default | -o 0,,5,0.6 | -o 3,,,0.5 | -o ,,1,2 |
+| default | -a 0,,5,0.6 | -a 3,,,0.5 | -a ,,1,2 |
 | --- | --- | --- | --- |
 | <img src="examples/lena-sift-circles-default.png" width="400"/> | <img src="examples/lena-sift-circles-0__5_0.6.png" width="400"/> | <img src="examples/lena-sift-circles-3___0.5.png" width="400"/> | <img src="examples/lena-sift-circles-__1_2.png" width="400"/> |
 | <img src="examples/carqueiranne-sift-circles-default.png" width="400"/> | <img src="examples/carqueiranne-sift-circles-0__5_0.6.png" width="400"/> | <img src="examples/carqueiranne-sift-circles-3___0.5.png" width="400"/> | <img src="examples/carqueiranne-sift-circles-__1_2.png" width="400"/> |
 | <img src="examples/collobrieres-sift-circles-default.png" width="400"/> | <img src="examples/collobrieres-sift-circles-0__5_0.6.png" width="400"/> | <img src="examples/collobrieres-sift-circles-3___0.5.png" width="400"/> | <img src="examples/collobrieres-sift-circles-__1_2.png" width="400"/> |
 
 ### sift-lines
-| default | -o 0 | -o 3,20, | -o 1,100 |
+| default | -a 0 | -a 3,20, | -a 1,100 |
 | --- | --- | --- | --- |
 | <img src="examples/lena-sift-lines-default.png" width="400"/> | <img src="examples/lena-sift-lines-0.png" width="400"/> | <img src="examples/lena-sift-lines-3_20_.png" width="400"/> | <img src="examples/lena-sift-lines-1_100.png" width="400"/> |
 | <img src="examples/carqueiranne-sift-lines-default.png" width="400"/> | <img src="examples/carqueiranne-sift-lines-0.png" width="400"/> | <img src="examples/carqueiranne-sift-lines-3_20_.png" width="400"/> | <img src="examples/carqueiranne-sift-lines-1_100.png" width="400"/> |

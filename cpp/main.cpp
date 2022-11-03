@@ -33,35 +33,45 @@ void help_exit(const string& message, int exitcode=1)
 }
 
 
-bool run(const string& img_path, const string& mode, const string& options, bool cmap, cv::ColormapTypes cmap_type, bool random, uint smooth, const string& output_file)
+bool run(
+    const string& img_path,
+    const string& mode,
+    const string& arguments,
+    bool cmap,
+    cv::ColormapTypes cmap_type,
+    bool random,
+    uint smooth,
+    const string& output_file,
+    uint input_resize,
+    uint output_resize)
 {
     cv::Mat img = cv::imread(img_path, cv::IMREAD_COLOR);
-    cv::Mat data;
-    cv::cvtColor(img, data, cv::COLOR_RGB2GRAY);
-    if(!data.data)
+    if(!img.data)
     {
         cerr << "Could not open file" << endl;
         return false;
     }
 
+    if (input_resize > 0)
+        fitImage(img, img, input_resize);
     cv::Mat result(img.size(), CV_8UC3);
     
     unique_ptr<AbstractVoronizer> voronizer;
     if (mode == "sobel")
-        voronizer = SobelVoronizer::create(options);
+        voronizer = SobelVoronizer::create(arguments);
     else if (mode == "kmeans-circles")
-        voronizer = KMeansVoronizerCircles::create(options);
+        voronizer = KMeansVoronizerCircles::create(arguments);
     else if (mode == "kmeans-lines")
-        voronizer = KMeansVoronizerLines::create(options);
+        voronizer = KMeansVoronizerLines::create(arguments);
     else if (mode == "sift-circles")
-        voronizer = SIFTVoronizerCircles::create(options);
+        voronizer = SIFTVoronizerCircles::create(arguments);
     else if (mode == "sift-lines")
-        voronizer = SIFTVoronizerLines::create(options);
+        voronizer = SIFTVoronizerLines::create(arguments);
     else
         throw logic_error("Mode not yet implemented");
 
     if (voronizer == nullptr)
-        help_exit("Invalid -o options. Read the description of --mode to see allowed values for the selected mode.");
+        help_exit("Invalid -a arguments. Read the description of --mode to see allowed values for the selected mode.");
 
     if (cmap)
         voronizer->set_colormap(cmap_type, random);
@@ -70,6 +80,8 @@ bool run(const string& img_path, const string& mode, const string& options, bool
     if (smooth > 0)
         smoothEdges(result, result, 9, smooth);
 
+    if (output_resize > 0)
+        fitImage(result, result, output_resize);
 
     if (output_file != "")
         cv::imwrite(output_file, result);
@@ -91,12 +103,12 @@ int main( int argc, char** argv)
         .help("path to image to voronize")
         .required();
 
-    args.add_argument("-o", "--options")
-        .help("Comma separated list of mode-specific positional options\n"
-        "\t\t(see --mode option description for more information).\n"
+    args.add_argument("-a", "--args")
+        .help("Comma separated list of mode-specific positional arguments\n"
+        "\t\t(see --mode argument description for more information).\n"
         "\t\tSupports truncated list as well as using default value by omitting the value\n"
-        "\t\t(e.g. \"-o ,,,0.5\" will result in setting the third option to 0.5,\n"
-        "\t\tall other options will keep their default values).")        
+        "\t\t(e.g. \"-a ,,,0.5\" will result in setting the third argument to 0.5,\n"
+        "\t\tall other arguments will keep their default values).")        
         .default_value<string>("");
 
     vector<string> modes = {"sobel", "kmeans-circles", "kmeans-lines", "sift-circles", "sift-lines"};
@@ -104,7 +116,7 @@ int main( int argc, char** argv)
     ss << std::fixed << std::setprecision(2) << 
         "voronizer mode: " << to_string(modes) << "\n"
         "\n"
-        "\t\t   sobel:  options ["
+        "\t\t   sobel:  arguments ["
                 <<  "MEDIAN_PRE=" << SobelVoronizer::default_median_pre
                 << ",EDGE_TRESHOLD=" << SobelVoronizer::default_edge_treshold
                 << ",MEDIAN_POST=" << SobelVoronizer::default_median_post
@@ -117,7 +129,7 @@ int main( int argc, char** argv)
         "\t\t      4. apply median filter of size MEDIAN_POST\n"
         "\t\t      5. remove any regions with less than CLUSTER_SIZE_TRESHOLD pixels.\n"
         "\n"
-        "\t\t   kmeans-circles:  options ["
+        "\t\t   kmeans-circles:  arguments ["
                 <<  "MEDIAN_PRE=" << KMeansVoronizerCircles::default_median_pre
                 << ",N_COLORS=" << KMeansVoronizerCircles::default_n_colors
                 << ",CLUSTER_SIZE_TRESHOLD=" << KMeansVoronizerCircles::default_cluster_size_treshold
@@ -134,7 +146,7 @@ int main( int argc, char** argv)
         "\t\t         with given RADIUS (0 for points instead of circles) and THICKNESS\n"
         "\t\t         (-1 to fill the circles)\n"
         "\n"
-        "\t\t   kmeans-lines:  options ["
+        "\t\t   kmeans-lines:  arguments ["
                 <<  "MEDIAN_PRE=" << KMeansVoronizerLines::default_median_pre
                 << ",N_COLORS=" << KMeansVoronizerLines::default_n_colors
                 << ",CLUSTER_SIZE_TRESHOLD=" << KMeansVoronizerLines::default_cluster_size_treshold
@@ -147,7 +159,7 @@ int main( int argc, char** argv)
         "\t\t         - for each point try RANDOM_ITER other (unused) points and select\n"
         "\t\t         the closest one to create new line segment\n"
         "\n"
-        "\t\t   sift-circles:  options ["
+        "\t\t   sift-circles:  arguments ["
                     <<  "KEYPOINT_SIZE_TRESHOLD=" << SIFTVoronizerCircles::default_keypoint_size_treshold
                     << ",RADIUS=" << SIFTVoronizerCircles::default_radius
                     << ",THICKNESS=" << SIFTVoronizerCircles::default_thickness
@@ -162,7 +174,7 @@ int main( int argc, char** argv)
         "\t\t         which can be adjusted by RADIUS_MULTIPLIER.\n"
         "\t\t         (RADIUS_MULTIPLIER is ignored in case of RADIUS >= 0)\n"
         "\n"
-        "\t\t   sift-lines:  options ["
+        "\t\t   sift-lines:  arguments ["
                     <<  "KEYPOINT_SIZE_TRESHOLD=" << SIFTVoronizerLines::default_keypoint_size_treshold
                     << ",RANDOM_ITER=" << SIFTVoronizerLines::default_n_iter
                     << "]\n"
@@ -178,10 +190,10 @@ int main( int argc, char** argv)
         .default_value<string>("sobel");
 
     args.add_argument("-c", "--colormap")
-        .help("OpenCV colormap name to use instead of original image as color template:\n"
-        "\t\t{autumn, bone, jet, winter, rainbow, ocean, summer, spring, cool, hsv, pink,\n"
-        "\t\thot, parula, magma, inferno, plasma, viridis, cividis, twilight,\n"
-        "\t\ttwilight_shifted, turbo, deepgreen}")
+        .help("OpenCV colormap name to use instead of original image as color template\n" 
+        "\t\tor \"bw\" for black & white image: {autumn, bone, jet, winter, rainbow, ocean,\n"
+        "\t\tsummer, spring, cool, hsv, pink, hot, parula, magma, inferno, plasma, viridis,\n"
+        "\t\tcividis, twilight, twilight_shifted, turbo, deepgreen, bw}")
         .default_value<string>("");
 
     args.add_argument("-f", "--file")
@@ -197,6 +209,19 @@ int main( int argc, char** argv)
     args.add_argument("-s", "--smooth")
         .help("Strength of edges smoothing")
         .default_value<uint>(3)
+        .scan<'u', uint>();
+
+    args.add_argument("-i", "--isize")
+        .help("Size of the longer image side for image resizing *before* the computation.\n"
+        "\t\tThis can speed-up the computation but also can change the output as it can\n"
+        "\t\tprocess of creating the generators.")
+        .default_value<uint>(0)
+        .scan<'u', uint>();
+
+    args.add_argument("-o", "--osize")
+        .help("Size of the longer image side for image resizing *after* the computation.\n"
+        "\t\t")
+        .default_value<uint>(0)
         .scan<'u', uint>();
 
 
@@ -215,8 +240,10 @@ int main( int argc, char** argv)
     bool random = args.get<bool>("-r");
     uint smooth = args.get<uint>("-s");
     string img_path = args.get("image");
-    string options = args.get("-o");
+    string arguments = args.get("-a");
     string output_file = args.get("-f");
+    uint input_resize = args.get<uint>("-i");
+    uint output_resize = args.get<uint>("-o");
 
     if (!fs::exists(img_path) || fs::is_directory(img_path))
         help_exit("File does not exist: " + img_path);
@@ -225,7 +252,7 @@ int main( int argc, char** argv)
     if (cmap && !strToColormap(args.get<string>("-c"), cmap_type))
         help_exit("Unrecognized colormap: " + args.get<string>("-c"));
 
-    run(img_path, mode, options, cmap, cmap_type, random, smooth, output_file);
+    run(img_path, mode, arguments, cmap, cmap_type, random, smooth, output_file, input_resize, output_resize);
 
     return 0;
 }
