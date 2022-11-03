@@ -14,7 +14,7 @@ Voronizer can be runned from terminal. e.g:
 ```
 ./Voronizer -m sift-circles -a 10,,1,0.5 img/lena.jpg 
 ```
-will run the Voronizer in `sift-circles` mode (with mode-specific arguments defined by `-a` arguments) and display the result. The image can be also saved to file instead by specifying the path by `-f` option. All arguments are explained in following description, which can be also display by running the Voronizer without any arguments (or with `-h` option).
+will run the Voronizer in `sift-circles` mode (with mode-specific arguments defined by `-a` arguments) and display the result. The image can be also saved to file instead by specifying the path by `-f` option. All arguments are explained in following description, which can be also display by running the Voronizer with `-h` flag.
 
 
 ```
